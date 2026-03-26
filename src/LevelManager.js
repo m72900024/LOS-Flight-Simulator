@@ -57,6 +57,8 @@ export class LevelManager {
 
         this._wpBaseY = [];
         this.activeTarget = null;
+        this._gates = [];
+        this._gateIndex = 0;
 
         const grp = this.scene.levelGroup;
         while (grp.children.length > 0) grp.remove(grp.children[0]);
@@ -65,7 +67,7 @@ export class LevelManager {
         const lineGeo = new THREE.BufferGeometry();
         lineGeo.setAttribute('position', new THREE.Float32BufferAttribute([0,0,0, 0,0,0], 3));
         const lineMat = new THREE.LineDashedMaterial({
-            color: 0x00ffcc, dashSize: 0.5, gapSize: 0.3, transparent: true, opacity: 0.8
+            color: 0xffff00, dashSize: 0.5, gapSize: 0.3, transparent: true, opacity: 1.0
         });
         this._guideLine = new THREE.Line(lineGeo, lineMat);
         this._guideLine.visible = false;
@@ -236,9 +238,17 @@ export class LevelManager {
     }
 
     _setupGate(grp) {
-        const gate = this._makeGate([0, 3, -15], [0, 3, 0]);
-        grp.add(gate);
-        this._gate = gate;
+        const gate1 = this._makeGate([0, 3, -12], [0, 3, 0]);
+        grp.add(gate1);
+        const gate2Geo = new THREE.TorusGeometry(1.5, 0.2, 8, 30);
+        const gate2 = new THREE.Mesh(gate2Geo,
+            new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0xff4400, emissiveIntensity: 0.4 }));
+        gate2.position.set(0, 3, -22);
+        gate2.lookAt(0, 3, 0);
+        gate2.castShadow = true;
+        grp.add(gate2);
+        this._gates = [gate1, gate2];
+        this._gateIndex = 0;
     }
 
     _setupFigure8(grp) {
@@ -461,12 +471,22 @@ export class LevelManager {
             pFill.style.width = (this.wpIndex / this.waypoints.length * 100) + '%';
 
         } else if (L === 6) {
-            const target = this._gate.position;
+            const gate = this._gates[this._gateIndex];
+            const target = gate.position;
             this.activeTarget = target;
             this._updateGuideLine(dronePos, target);
             const dist = dronePos.distanceTo(target);
-            if (dist < 2) this._complete();
-            pFill.style.width = Math.max(0, 100 - dist * 5) + '%';
+            if (dist < 2) {
+                this._gateIndex++;
+                if (this._gateIndex >= this._gates.length) {
+                    this._complete();
+                } else {
+                    gate.material.emissiveIntensity = 0.1;
+                    gate.material.opacity = 0.4;
+                    gate.material.transparent = true;
+                }
+            }
+            pFill.style.width = (this._gateIndex / this._gates.length * 100) + '%';
 
         } else if (L === 7) {
             const cp = this.checkpoints[this.cpIndex];
@@ -520,6 +540,7 @@ export class LevelManager {
         this.saveBest(this.currentLevel, this.elapsed);
         // Unlock next level
         LevelManager.setUnlockedLevel(this.currentLevel + 1);
+        window.dispatchEvent(new Event('level-complete'));
 
         document.getElementById('msg-overlay').style.display = 'block';
         document.getElementById('msg-time').innerText = `用時: ${this.elapsed.toFixed(1)}s`;

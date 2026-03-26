@@ -6,11 +6,59 @@ import { CONFIG, FLIGHT_MODES } from './Config.js';
 import { touchInput } from './TouchInput.js';
 
 const input = new InputController();
-let physics, gameScene, levelManager;
+let physics, gameScene, levelManager, audioEngine;
 const clock = new THREE.Clock();
 let appState = 'SETUP';
 let isGamepadInit = false;
 let selectedLevel = 1;
+
+class AudioEngine {
+    constructor() {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        this.osc = null;
+        this.gain = null;
+        this._initMotor();
+        window.addEventListener('level-complete', () => this._playComplete());
+    }
+
+    _initMotor() {
+        this.osc = this.ctx.createOscillator();
+        this.gain = this.ctx.createGain();
+        this.osc.type = 'sawtooth';
+        this.osc.frequency.value = 80;
+        this.gain.gain.value = 0;
+        this.osc.connect(this.gain);
+        this.gain.connect(this.ctx.destination);
+        this.osc.start();
+    }
+
+    updateMotor(throttle, armed) {
+        if (!armed || throttle < 0.01) {
+            this.gain.gain.value = 0;
+            return;
+        }
+        this.osc.frequency.value = 80 + throttle * 320;
+        this.gain.gain.value = Math.min(throttle * 0.15, 0.12);
+    }
+
+    _playComplete() {
+        const now = this.ctx.currentTime;
+        const notes = [261.6, 329.6, 392.0]; // C4, E4, G4
+        notes.forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            g.gain.value = 0.2;
+            g.gain.setValueAtTime(0.2, now + i * 0.15);
+            g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.15 + 0.14);
+            osc.connect(g);
+            g.connect(this.ctx.destination);
+            osc.start(now + i * 0.15);
+            osc.stop(now + i * 0.15 + 0.15);
+        });
+    }
+}
 
 // DOM Cache for game loop
 let domCache = {};
@@ -152,6 +200,7 @@ function startGame() {
         physics = new PhysicsEngine();
         gameScene = new GameScene();
         levelManager = new LevelManager(gameScene);
+        audioEngine = new AudioEngine();
     }
     physics.reset();
     if (gameScene) gameScene.resetCamera();
@@ -236,6 +285,7 @@ function animate() {
         const inp = input.update();
         physics.update(dt, inp);
         gameScene.updateDrone(physics.pos, physics.quat, inp.t, physics.crashIntensity);
+        if (audioEngine) audioEngine.updateMotor(inp.t, inp.armed);
         levelManager.checkWinCondition(physics.pos, dt);
 
         domCache.statThr.innerText = `THR: ${Math.round(inp.t*100)}%`;

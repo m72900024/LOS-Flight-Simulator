@@ -3,7 +3,6 @@ import { CONFIG } from './Config.js';
 export class GameScene {
     constructor() {
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x87CEEB);
         this.scene.fog = new THREE.FogExp2(0xc8e6ff, 0.005);
 
         this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 500);
@@ -21,11 +20,64 @@ export class GameScene {
         this.propellers = [];
         this.levelGroup = new THREE.Group();
         this.ledMesh = null;
+        this.clouds = [];
+        this.windSock = null;
 
+        this._createSkyDome();
         this._initLights();
         this._initEnvironment();
+        this._createClouds();
         this._createDrone();
         this.scene.add(this.levelGroup);
+    }
+
+    _createSkyDome() {
+        const skyGeo = new THREE.SphereGeometry(400, 32, 32);
+        const skyMat = new THREE.ShaderMaterial({
+            uniforms: {
+                topColor: { value: new THREE.Color(0x3a8fd6) },
+                bottomColor: { value: new THREE.Color(0xf5c28a) }
+            },
+            vertexShader: `
+                varying vec3 vWorldPos;
+                void main() {
+                    vec4 wp = modelMatrix * vec4(position, 1.0);
+                    vWorldPos = wp.xyz;
+                    gl_Position = projectionMatrix * viewMatrix * wp;
+                }
+            `,
+            fragmentShader: `
+                uniform vec3 topColor;
+                uniform vec3 bottomColor;
+                varying vec3 vWorldPos;
+                void main() {
+                    float h = normalize(vWorldPos).y;
+                    gl_FragColor = vec4(mix(bottomColor, topColor, max(h, 0.0)), 1.0);
+                }
+            `,
+            side: THREE.BackSide
+        });
+        this.scene.add(new THREE.Mesh(skyGeo, skyMat));
+    }
+
+    _createClouds() {
+        const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
+        for (let i = 0; i < 8; i++) {
+            const group = new THREE.Group();
+            const count = 3 + Math.floor(Math.random() * 3);
+            for (let j = 0; j < count; j++) {
+                const s = 1.5 + Math.random() * 2.5;
+                const sphere = new THREE.Mesh(new THREE.SphereGeometry(s, 8, 8), cloudMat);
+                sphere.position.set(j * 2.2 - count, (Math.random() - 0.5) * 1.0, (Math.random() - 0.5) * 1.5);
+                sphere.scale.y = 0.5;
+                group.add(sphere);
+            }
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 40 + Math.random() * 80;
+            group.position.set(Math.cos(angle) * dist, 40 + Math.random() * 20, Math.sin(angle) * dist);
+            this.scene.add(group);
+            this.clouds.push(group);
+        }
     }
 
     _initLights() {
@@ -90,9 +142,13 @@ export class GameScene {
     _createTrees() {
         const tGeo = new THREE.CylinderGeometry(0.15, 0.2, 2, 6);
         const tMat = new THREE.MeshStandardMaterial({ color: 0x6b4226 });
-        const lGeo = new THREE.ConeGeometry(1.2, 3, 8);
         const lMats = [0x2d8a2d, 0x3a9a3a, 0x228822].map(c =>
             new THREE.MeshStandardMaterial({ color: c }));
+        const layers = [
+            { geo: new THREE.ConeGeometry(1.4, 2.5, 8), yOff: 0 },
+            { geo: new THREE.ConeGeometry(1.0, 2.0, 8), yOff: 1.5 },
+            { geo: new THREE.ConeGeometry(0.6, 1.5, 8), yOff: 2.7 }
+        ];
         for (let i = 0; i < 25; i++) {
             const a = Math.random() * Math.PI * 2;
             const d = 30 + Math.random() * 60;
@@ -101,31 +157,64 @@ export class GameScene {
             const trunk = new THREE.Mesh(tGeo, tMat);
             trunk.position.set(x, s, z); trunk.scale.setScalar(s); trunk.castShadow = true;
             this.scene.add(trunk);
-            const leaf = new THREE.Mesh(lGeo, lMats[i%3]);
-            leaf.position.set(x, s*2+1.5, z); leaf.scale.setScalar(s); leaf.castShadow = true;
-            this.scene.add(leaf);
+            const mat = lMats[i % 3];
+            const baseY = s * 2 + 1.0;
+            layers.forEach(l => {
+                const leaf = new THREE.Mesh(l.geo, mat);
+                leaf.position.set(x, baseY + l.yOff * s, z); leaf.scale.setScalar(s); leaf.castShadow = true;
+                this.scene.add(leaf);
+            });
         }
     }
 
     _createBuildings() {
+        const winMat = new THREE.MeshBasicMaterial({ color: 0xffffee, side: THREE.DoubleSide });
+        const roofMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8 });
         [{x:-40,z:-30,w:8,h:6,d:10,c:0x888888},{x:35,z:-25,w:6,h:4,d:8,c:0x999988},{x:-30,z:40,w:10,h:3,d:6,c:0x887766}]
         .forEach(b => {
             const m = new THREE.Mesh(new THREE.BoxGeometry(b.w,b.h,b.d),
                 new THREE.MeshStandardMaterial({color:b.c,roughness:0.7}));
             m.position.set(b.x,b.h/2,b.z); m.castShadow=true; m.receiveShadow=true;
             this.scene.add(m);
+            // Roof
+            const roof = new THREE.Mesh(new THREE.BoxGeometry(b.w+0.4, 0.2, b.d+0.4), roofMat);
+            roof.position.set(b.x, b.h+0.1, b.z); roof.castShadow=true;
+            this.scene.add(roof);
+            // Windows (4 on front face)
+            for (let wi = 0; wi < 2; wi++) {
+                for (let wj = 0; wj < 2; wj++) {
+                    const win = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.8), winMat);
+                    win.position.set(b.x - b.w*0.25 + wi*b.w*0.5, b.h*0.35 + wj*b.h*0.35, b.z + b.d/2 + 0.01);
+                    this.scene.add(win);
+                }
+            }
         });
     }
 
     _createFence() {
         const geo = new THREE.CylinderGeometry(0.05, 0.05, 1.2, 4);
         const mat = new THREE.MeshStandardMaterial({ color: 0x886644 });
+        const barMat = new THREE.MeshStandardMaterial({ color: 0x886644 });
         for (let i = -20; i <= 20; i += 4) {
             [[-20,i],[20,i],[i,-20],[i,20]].forEach(([x,z]) => {
                 const p = new THREE.Mesh(geo, mat);
                 p.position.set(x, 0.6, z); p.castShadow = true;
                 this.scene.add(p);
             });
+        }
+        // Horizontal bars between adjacent posts
+        const barH = new THREE.BoxGeometry(4, 0.06, 0.06);
+        const barV = new THREE.BoxGeometry(0.06, 0.06, 4);
+        for (let i = -20; i < 20; i += 4) {
+            const cx = i + 2;
+            // top side (z = -20)
+            const bt = new THREE.Mesh(barV, barMat); bt.position.set(-20, 1.0, cx); this.scene.add(bt);
+            // bottom side (z = 20)
+            const bb = new THREE.Mesh(barV, barMat); bb.position.set(20, 1.0, cx); this.scene.add(bb);
+            // left side (x = -20)
+            const bl = new THREE.Mesh(barH, barMat); bl.position.set(cx, 1.0, -20); this.scene.add(bl);
+            // right side (x = 20)
+            const br = new THREE.Mesh(barH, barMat); br.position.set(cx, 1.0, 20); this.scene.add(br);
         }
     }
 
@@ -138,6 +227,7 @@ export class GameScene {
             new THREE.MeshStandardMaterial({color:0xff6600}));
         sock.position.set(15.5,3.8,0); sock.rotation.z=-Math.PI/2;
         this.scene.add(sock);
+        this.windSock = sock;
     }
 
     _createDrone() {
@@ -200,6 +290,15 @@ export class GameScene {
             }
         }
         if(this.ledMesh) this.ledMesh.material.color.setHex((Date.now()&256)?0x00ff00:0x002200);
+
+        // Cloud drift
+        for (const cloud of this.clouds) {
+            cloud.position.x += 0.002;
+            if (cloud.position.x > 150) cloud.position.x = -150;
+        }
+
+        // Wind sock animation
+        if (this.windSock) this.windSock.rotation.z = -Math.PI/2 + Math.sin(Date.now()*0.002)*0.3;
 
         // LOS 第三人稱 — 飛手站在地面定點看飛機
         this.cameraTarget.lerp(pos, 0.08);
