@@ -197,6 +197,7 @@ export class InputController {
         // 解鎖：左搖桿推到左下角（油門最低 + 偏航最左）hold 2 秒 → armed
         // 上鎖：左搖桿推到右下角（油門最低 + 偏航最右）hold 2 秒 → disarmed
         if (ax.arm === -1 || ax.arm === undefined) {
+            this.state.armed = true; // 預設解鎖
             const thrRaw = gp.axes[ax.thrust] || 0;
             const yawRaw = gp.axes[ax.yaw] || 0;
             const pitchRaw = gp.axes[ax.pitch] || 0;
