@@ -199,20 +199,29 @@ export class InputController {
         if (ax.arm === -1 || ax.arm === undefined) {
             const thrRaw = gp.axes[ax.thrust] || 0;
             const yawRaw = gp.axes[ax.yaw] || 0;
-            const thrDown = thrRaw > 0.7;   // 左搖桿往下拉
-            const yawLeft = yawRaw < -0.7;  // 左搖桿往左
-            const yawRight = yawRaw > 0.7;  // 左搖桿往右
+            const pitchRaw = gp.axes[ax.pitch] || 0;
+            const rollRaw = gp.axes[ax.roll] || 0;
 
-            if (!this.state.armed && thrDown && yawLeft) {
-                // 準備解鎖
+            // 內八解鎖：左搖桿右下 + 右搖桿左下 hold 2s
+            const thrDown  = thrRaw > 0.7;      // 左搖桿往下
+            const yawRight = yawRaw > 0.7;       // 左搖桿往右
+            const pitchDown = pitchRaw > 0.7;    // 右搖桿往下
+            const rollLeft  = rollRaw < -0.7;    // 右搖桿往左
+            const isInnerCross = thrDown && yawRight && pitchDown && rollLeft;
+
+            // 外八上鎖：左搖桿左下 + 右搖桿右下 hold 2s
+            const yawLeft  = yawRaw < -0.7;
+            const rollRight = rollRaw > 0.7;
+            const isOuterCross = thrDown && yawLeft && pitchDown && rollRight;
+
+            if (!this.state.armed && isInnerCross) {
                 if (!this._armHoldStart) this._armHoldStart = now_t;
                 if (now_t - this._armHoldStart > 2000) {
                     this.state.armed = true;
                     this._armHoldStart = null;
                     window.dispatchEvent(new CustomEvent('input-mode-change', { detail: '🔓 已解鎖' }));
                 }
-            } else if (this.state.armed && thrDown && yawRight) {
-                // 準備上鎖
+            } else if (this.state.armed && isOuterCross) {
                 if (!this._disarmHoldStart) this._disarmHoldStart = now_t;
                 if (now_t - this._disarmHoldStart > 2000) {
                     this.state.armed = false;
