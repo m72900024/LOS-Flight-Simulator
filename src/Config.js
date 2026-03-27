@@ -5,9 +5,9 @@ export const CONFIG = {
     angularDrag: 15, hardDeck: 0.05, maxHeight: 50,
     thrustPower: 24, thrustExpo: 0.3, rates: 1.2, superRate: 0.7,
     maxTiltAngle: 55, droneScale: 3.0,
-    axes: { thrust: 2, yaw: 0, pitch: 1, roll: 3, arm: 4, mode: 5 },
-    invert: { t: false, r: false, e: true, a: false },
-    calibration: { roll: 0, pitch: 0, yaw: 0, thrust: 0 },
+    axes: { thrust: 1, yaw: 0, pitch: 2, roll: 5, arm: -1, mode: -1 },
+    invert: { t: false, r: false, e: false, a: false },
+    calibration: { roll: 0.00392, pitch: 0.00392, yaw: 0.00392, thrust: 0.00392 },
     endpoints: {
         thrust: { min: -1, max: 1 }, yaw: { min: -1, max: 1 },
         pitch: { min: -1, max: 1 }, roll: { min: -1, max: 1 }
