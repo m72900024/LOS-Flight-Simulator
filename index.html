@@ -56,6 +56,14 @@
         #msg-time { font-size:18px; color:#fff; }
         #msg-best { font-size:14px; color:#ffaa00; margin:5px 0 15px; }
 
+        /* 手把配置框 */
+        .gamepad-config-box { margin-top:15px; padding:12px; background:#1a1a2a; border:1px solid #446; border-radius:8px; }
+        .axis-row { display:flex; align-items:center; padding:4px 0; border-bottom:1px solid #333; }
+        .axis-name { width:40px; font-size:12px; color:#aaa; }
+        .axis-val { flex:1; font-size:12px; color:#888; font-family:monospace; margin-left:8px; }
+        .detect-btn { background:#444; border:1px solid #666; color:#fff; padding:3px 10px; border-radius:4px; font-size:11px; cursor:pointer; }
+        .detect-btn:hover { background:#555; }
+
         /* 鍵盤操作框 */
         .kb-box { margin-top:15px; padding:10px; background:#1a2a1a; border:1px solid #4a4; border-radius:8px; }
 
@@ -175,6 +183,49 @@
             <div class="channel-row" style="border:1px solid #553333;background:#2a1a1a;">
                 <div class="ch-info"><div class="ch-label" style="color:#ff5555">解鎖</div><select id="map-arm" onchange="window.updateMapping()"><option>...</option></select></div>
                 <div id="txt-arm" style="flex:1;font-weight:bold;color:#ff3333;font-size:14px;text-align:right;">未解鎖</div>
+            </div>
+
+            <div class="gamepad-config-box">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <span style="font-size:13px;color:#88aaff;">🎮 手把配置</span>
+                    <span id="gp-status" style="font-size:11px;color:#ff6666;">未連接</span>
+                </div>
+                <div id="gp-detect-area" style="font-size:11px;color:#888;margin-bottom:8px;">請插入手把並按任意按鈕...</div>
+
+                <div id="gp-axis-setup" style="display:none;">
+                    <div class="axis-row">
+                        <span class="axis-name">油門</span>
+                        <span id="axis-label-thrust" class="axis-val">--</span>
+                        <button id="detect-btn-thrust" class="detect-btn" onclick="window.detectAxis('thrust')">偵測</button>
+                    </div>
+                    <div class="axis-row">
+                        <span class="axis-name">偏航</span>
+                        <span id="axis-label-yaw" class="axis-val">--</span>
+                        <button id="detect-btn-yaw" class="detect-btn" onclick="window.detectAxis('yaw')">偵測</button>
+                    </div>
+                    <div class="axis-row">
+                        <span class="axis-name">俯仰</span>
+                        <span id="axis-label-pitch" class="axis-val">--</span>
+                        <button id="detect-btn-pitch" class="detect-btn" onclick="window.detectAxis('pitch')">偵測</button>
+                    </div>
+                    <div class="axis-row">
+                        <span class="axis-name">橫滾</span>
+                        <span id="axis-label-roll" class="axis-val">--</span>
+                        <button id="detect-btn-roll" class="detect-btn" onclick="window.detectAxis('roll')">偵測</button>
+                    </div>
+
+                    <div style="margin-top:10px;padding:8px;background:#111;border-radius:6px;">
+                        <label style="font-size:12px;color:#ccc;cursor:pointer;">
+                            <input type="checkbox" id="hybrid-mode-check" style="margin-right:5px;">
+                            混合模式（左手把 油門+偏航，←↑↓→ 俯仰+橫滾）
+                        </label>
+                    </div>
+
+                    <button class="start-btn" style="margin-top:10px;padding:8px 30px;font-size:14px;"
+                        onclick="document.getElementById('hybrid-mode-check').checked ? window.startHybrid() : window.startGamepad()">
+                        🎮 開始飛行
+                    </button>
+                </div>
             </div>
 
             <div class="kb-box">

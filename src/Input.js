@@ -11,6 +11,7 @@ export class InputController {
         this.gamepadIndex = null;
         this.useKeyboard = false; // 鍵盤模式開關
         this.useTouch = false;    // 觸控模式開關
+        this.useHybrid = false;   // 混合模式（左手把+鍵盤）
 
         // Link touch input to our state for arm/mode buttons
         touchInput.linkState(this.state);
@@ -206,8 +207,69 @@ export class InputController {
         return this.state;
     }
 
+    // --- 混合模式：左搖桿油門+偏航，鍵盤俯仰+橫滾 ---
+    updateHybrid() {
+        const gamepads = navigator.getGamepads();
+        const gp = (this.gamepadIndex !== null) ? gamepads[this.gamepadIndex] : null;
+
+        // --- 油門：左搖桿 AXIS 1 ---
+        const thrAxis = (window._gpAxisConfig && window._gpAxisConfig.thrust !== undefined)
+            ? window._gpAxisConfig.thrust : 1;
+        if (gp && gp.axes[thrAxis] !== undefined) {
+            const axisVal = gp.axes[thrAxis];
+            // 往上推 axis 變負，往下拉變正 → thrust = (1 - axisVal) / 2
+            let thrust = (1 - axisVal) / 2;
+            // deadzone around center (~0.5)
+            if (Math.abs(thrust - 0.5) < 0.05) thrust = 0.5;
+            this.state.t = Math.max(0, Math.min(1, thrust));
+        }
+
+        // W/S 鍵盤油門也保留（可以同時用鍵盤控油門）
+        const now = performance.now();
+        const dt = this._lastHybridTime ? (now - this._lastHybridTime) / 1000 : 1 / 60;
+        this._lastHybridTime = now;
+        const k = this.keys;
+        if (k['KeyW']) {
+            this.state.t = Math.min(1, this.state.t + 2.4 * dt);
+        }
+        if (k['KeyS']) {
+            this.state.t = Math.max(0, this.state.t - 2.4 * dt);
+        }
+
+        // --- 偏航：左搖桿 AXIS 0 ---
+        const yawAxis = (window._gpAxisConfig && window._gpAxisConfig.yaw !== undefined)
+            ? window._gpAxisConfig.yaw : 0;
+        if (gp && gp.axes[yawAxis] !== undefined) {
+            let yaw = gp.axes[yawAxis];
+            if (Math.abs(yaw) < 0.05) yaw = 0;
+            this.state.y = Math.max(-1, Math.min(1, yaw));
+        }
+
+        // --- 俯仰/橫滾：鍵盤方向鍵 ---
+        const fm = this.state.flightMode;
+        const stickVal = (fm === FLIGHT_MODES.ANGLE || fm === FLIGHT_MODES.ALT_HOLD) ? 0.35 : 0.6;
+        let pitch = 0, roll = 0;
+        if (k['ArrowUp'])    pitch = -stickVal;
+        if (k['ArrowDown'])  pitch =  stickVal;
+        if (k['ArrowLeft'])  roll  = -stickVal;
+        if (k['ArrowRight']) roll  =  stickVal;
+
+        // Shift 精密模式
+        if (k['ShiftLeft'] || k['ShiftRight']) {
+            pitch *= 0.4;
+            roll *= 0.4;
+        }
+
+        this.state.p = Math.max(-1, Math.min(1, pitch));
+        this.state.r = Math.max(-1, Math.min(1, roll));
+
+        return this.state;
+    }
+
     update() {
-        if (this.useTouch) {
+        if (this.useHybrid) {
+            return this.updateHybrid();
+        } else if (this.useTouch) {
             return this.updateTouch();
         } else if (this.useKeyboard) {
             return this.updateKeyboard();

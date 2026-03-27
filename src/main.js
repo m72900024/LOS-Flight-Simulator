@@ -167,11 +167,79 @@ window.startTouch = function () {
 
 window.startGameApp = function () { showLevelSelect(); };
 
+window.startGamepad = function () {
+    showLevelSelect();
+};
+
+window.startHybrid = function () {
+    input.useHybrid = true;
+    input.state.armed = true;
+    showLevelSelect();
+};
+
+// --- 手把連接 UI 更新 ---
+window.addEventListener("gamepadconnected", (e) => {
+    const statusEl = document.getElementById("gp-status");
+    const detectEl = document.getElementById("gp-detect-area");
+    const setupEl = document.getElementById("gp-axis-setup");
+    if (statusEl) {
+        statusEl.innerText = "✅ 已連接";
+        statusEl.style.color = "#00ffcc";
+    }
+    if (detectEl) detectEl.innerText = e.gamepad.id.substring(0, 40);
+    if (setupEl) setupEl.style.display = "block";
+});
+
+// --- 軸位自動偵測 ---
+window.detectAxis = function (channel) {
+    const btn = document.getElementById("detect-btn-" + channel);
+    const label = document.getElementById("axis-label-" + channel);
+    if (!btn || !label) return;
+    btn.innerText = "搖動搖桿...";
+    btn.style.background = "#aa8800";
+
+    const gp = navigator.getGamepads()[0];
+    if (!gp) return;
+    const baseline = {};
+    gp.axes.forEach((v, i) => { baseline[i] = v; });
+
+    let best = { axis: -1, delta: 0 };
+    const interval = setInterval(() => {
+        const g = navigator.getGamepads()[0];
+        if (!g) return;
+        g.axes.forEach((v, i) => {
+            const d = Math.abs(v - (baseline[i] || 0));
+            if (d > best.delta) { best.delta = d; best.axis = i; }
+        });
+    }, 50);
+
+    setTimeout(() => {
+        clearInterval(interval);
+        btn.innerText = "重新偵測";
+        btn.style.background = "#444";
+        if (best.axis >= 0 && best.delta > 0.1) {
+            label.innerText = "AXIS " + best.axis;
+            label.style.color = "#00ffcc";
+            // 更新下拉選單（若存在）
+            const axisMap = { thrust: "map-t", yaw: "map-r", pitch: "map-e", roll: "map-a" };
+            const sel = document.getElementById(axisMap[channel]);
+            if (sel) { sel.value = best.axis; window.updateMapping && window.updateMapping(); }
+            // 存到全域軸位設定
+            window._gpAxisConfig = window._gpAxisConfig || {};
+            window._gpAxisConfig[channel] = best.axis;
+        } else {
+            label.innerText = "未偵測到";
+            label.style.color = "#ff6666";
+        }
+    }, 1500);
+};
+
 window.goBackToSetup = function () {
     document.getElementById('level-select').style.display = 'none';
     document.getElementById('setup-screen').style.display = 'flex';
     touchInput.hide();
     input.useTouch = false;
+    input.useHybrid = false;
     appState = 'SETUP';
 };
 
@@ -295,7 +363,7 @@ function animate() {
         domCache.statMode.innerText = 'MODE: '+(modeNames[inp.flightMode]||'?');
         domCache.statArmed.innerText = inp.armed ? 'ARMED' : 'DISARMED';
         domCache.statArmed.style.color = inp.armed ? '#00ff00' : '#ff3333';
-        domCache.statInput.innerText = input.useTouch ? '📱 觸控' : input.useKeyboard ? '⌨️ 鍵盤' : '🎮 搖桿';
+        domCache.statInput.innerText = input.useTouch ? '📱 觸控' : input.useHybrid ? '🎮+⌨️ 混合' : input.useKeyboard ? '⌨️ 鍵盤' : '🎮 搖桿';
 
         // 高度警告
         if (physics.pos.y > CONFIG.maxHeight*0.8) { domCache.statAlt.style.color='#ff3333'; domCache.statAlt.innerText+=' ⚠️'; }
