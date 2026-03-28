@@ -127,6 +127,75 @@
         .level-card.exam-card { border-color:#00ffcc; box-shadow:0 0 12px rgba(0,255,204,0.2); }
         .level-card.exam-card:not(.locked):hover { border-color:#00ffcc; box-shadow:0 8px 28px rgba(0,255,204,0.4); }
 
+        /* 物理參數面板 */
+        #phys-toggle {
+            position:absolute; top:15px; right:15px; z-index:3000;
+            width:38px; height:38px; border-radius:50%;
+            background:rgba(0,0,0,0.6); border:1.5px solid #00ffcc44;
+            color:#00ffcc; font-size:18px; cursor:pointer; display:none;
+            align-items:center; justify-content:center;
+            transition:all 0.2s; pointer-events:auto;
+        }
+        #phys-toggle:hover { background:rgba(0,255,204,0.15); border-color:#00ffcc; }
+        #phys-toggle.active { background:rgba(0,255,204,0.2); border-color:#00ffcc; }
+
+        #phys-panel {
+            position:absolute; top:0; right:-320px; width:300px; height:100%;
+            background:rgba(6,12,10,0.96); border-left:1px solid #00ffcc22;
+            z-index:2900; display:none; flex-direction:column;
+            padding:55px 16px 16px; box-sizing:border-box;
+            transition:right 0.28s cubic-bezier(.4,0,.2,1);
+            overflow-y:auto; pointer-events:auto;
+            backdrop-filter:blur(8px);
+        }
+        #phys-panel.open { right:0; }
+        #phys-panel h3 {
+            color:#00ffcc; font-size:13px; letter-spacing:2px;
+            margin:0 0 12px; padding-bottom:8px;
+            border-bottom:1px solid #00ffcc22; text-transform:uppercase;
+        }
+        .pp-section { margin-bottom:14px; }
+        .pp-section-title {
+            font-size:10px; color:#556; letter-spacing:1.5px;
+            text-transform:uppercase; margin-bottom:8px;
+        }
+        .pp-row {
+            display:flex; align-items:center; margin-bottom:9px; gap:8px;
+        }
+        .pp-label {
+            width:72px; font-size:11px; color:#aac; flex-shrink:0; line-height:1.2;
+        }
+        .pp-slider {
+            flex:1; -webkit-appearance:none; appearance:none;
+            height:4px; border-radius:2px; outline:none; cursor:pointer;
+            background:linear-gradient(to right, #00ffcc var(--pct,50%), #1a3a2e var(--pct,50%));
+        }
+        .pp-slider::-webkit-slider-thumb {
+            -webkit-appearance:none; width:14px; height:14px;
+            border-radius:50%; background:#00ffcc;
+            box-shadow:0 0 6px rgba(0,255,204,0.5); cursor:pointer;
+        }
+        .pp-val {
+            width:36px; text-align:right; font-size:11px;
+            font-family:monospace; color:#00ffcc;
+        }
+        .pp-reset-btn {
+            width:100%; margin-top:8px; padding:7px;
+            background:transparent; border:1px solid #00ffcc33;
+            color:#00ffcc88; border-radius:6px; font-size:11px;
+            cursor:pointer; letter-spacing:1px; transition:all 0.2s;
+        }
+        .pp-reset-btn:hover { background:rgba(0,255,204,0.1); color:#00ffcc; border-color:#00ffcc66; }
+        .pp-preset-row { display:flex; gap:6px; margin-bottom:12px; }
+        .pp-preset {
+            flex:1; padding:5px 4px; font-size:10px; border-radius:6px;
+            border:1px solid #00ffcc33; background:transparent;
+            color:#00ffcc88; cursor:pointer; letter-spacing:0.5px;
+            text-align:center; transition:all 0.15s;
+        }
+        .pp-preset:hover { background:rgba(0,255,204,0.12); color:#00ffcc; }
+        .pp-preset.active { background:rgba(0,255,204,0.18); color:#00ffcc; border-color:#00ffcc66; }
+
         /* HUD */
         #ui-layer { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; display:none; flex-direction:column; justify-content:space-between; }
         #hud-top { padding:15px 20px; color:#fff; text-shadow:1px 1px 2px black; font-size:16px; font-weight:bold; background:linear-gradient(to bottom,rgba(0,0,0,0.6),transparent); display:flex; justify-content:space-between; }
@@ -195,6 +264,85 @@
                 <div style="font-size:11px;color:#666;margin-top:4px;">ESC 返回選關</div>
             </div>
         </div>
+    </div>
+
+    <!-- 物理參數面板 -->
+    <button id="phys-toggle" title="物理參數">⚙️</button>
+    <div id="phys-panel">
+        <h3>⚙️ 物理參數</h3>
+
+        <!-- 預設配置 -->
+        <div class="pp-section">
+            <div class="pp-section-title">快速預設</div>
+            <div class="pp-preset-row">
+                <button class="pp-preset" data-preset="beginner">🐣 初學</button>
+                <button class="pp-preset active" data-preset="default">⚖️ 預設</button>
+                <button class="pp-preset" data-preset="race">🏁 競速</button>
+                <button class="pp-preset" data-preset="exam">📋 考試</button>
+            </div>
+        </div>
+
+        <!-- 動力 -->
+        <div class="pp-section">
+            <div class="pp-section-title">🔋 動力</div>
+            <div class="pp-row">
+                <span class="pp-label">推力</span>
+                <input class="pp-slider" type="range" id="pp-thrustPower" min="8" max="50" step="0.5" value="24">
+                <span class="pp-val" id="ppv-thrustPower">24</span>
+            </div>
+            <div class="pp-row">
+                <span class="pp-label">油門曲線</span>
+                <input class="pp-slider" type="range" id="pp-thrustExpo" min="0" max="0.9" step="0.05" value="0.3">
+                <span class="pp-val" id="ppv-thrustExpo">0.30</span>
+            </div>
+            <div class="pp-row">
+                <span class="pp-label">最大推力</span>
+                <input class="pp-slider" type="range" id="pp-maxThrust" min="10" max="60" step="1" value="28">
+                <span class="pp-val" id="ppv-maxThrust">28</span>
+            </div>
+        </div>
+
+        <!-- 物理 -->
+        <div class="pp-section">
+            <div class="pp-section-title">⚖️ 飛行物理</div>
+            <div class="pp-row">
+                <span class="pp-label">機體重量</span>
+                <input class="pp-slider" type="range" id="pp-mass" min="0.1" max="2.0" step="0.05" value="0.6">
+                <span class="pp-val" id="ppv-mass">0.60</span>
+            </div>
+            <div class="pp-row">
+                <span class="pp-label">空氣阻力</span>
+                <input class="pp-slider" type="range" id="pp-dragCoeff" min="0.002" max="0.08" step="0.001" value="0.015">
+                <span class="pp-val" id="ppv-dragCoeff">0.015</span>
+            </div>
+            <div class="pp-row">
+                <span class="pp-label">角速阻尼</span>
+                <input class="pp-slider" type="range" id="pp-angularDrag" min="3" max="40" step="0.5" value="15">
+                <span class="pp-val" id="ppv-angularDrag">15</span>
+            </div>
+        </div>
+
+        <!-- 操控 -->
+        <div class="pp-section">
+            <div class="pp-section-title">🎮 操控感</div>
+            <div class="pp-row">
+                <span class="pp-label">Rates</span>
+                <input class="pp-slider" type="range" id="pp-rates" min="0.2" max="3.0" step="0.05" value="1.2">
+                <span class="pp-val" id="ppv-rates">1.20</span>
+            </div>
+            <div class="pp-row">
+                <span class="pp-label">Super Rate</span>
+                <input class="pp-slider" type="range" id="pp-superRate" min="0" max="1.0" step="0.05" value="0.7">
+                <span class="pp-val" id="ppv-superRate">0.70</span>
+            </div>
+            <div class="pp-row">
+                <span class="pp-label">最大傾角</span>
+                <input class="pp-slider" type="range" id="pp-maxTiltAngle" min="10" max="85" step="1" value="55">
+                <span class="pp-val" id="ppv-maxTiltAngle">55°</span>
+            </div>
+        </div>
+
+        <button class="pp-reset-btn" id="pp-reset">↩ 恢復預設值</button>
     </div>
 
     <div id="msg-overlay">
@@ -367,6 +515,6 @@
             if (tb) tb.style.display = 'none';
         }
     </script>
-    <script type="module" src="./src/main.js?v=20260328-4"></script>
+    <script type="module" src="./src/main.js?v=20260329-1"></script>
 </body>
 </html>

@@ -400,6 +400,7 @@ function startGame() {
     if (gameScene) gameScene.resetCamera();
     levelManager.loadLevel(selectedLevel);
     appState = 'GAME';
+    showPhysPanel(true);
     clock.start();
 }
 
@@ -448,6 +449,7 @@ window.addEventListener('keydown', (e) => {
             if (gameScene) gameScene.resetCamera();
             input.keyThrottle = 0;
             touchInput.hide();
+            showPhysPanel(false);
             showLevelSelect();
         } else if (appState === 'LEVEL_SELECT') {
             document.getElementById('level-select').style.display = 'none';
@@ -467,6 +469,105 @@ window.addEventListener('resize', () => {
 });
 window.addEventListener('reset-drone', () => { if (physics) physics.reset();
             if (gameScene) gameScene.resetCamera(); });
+
+// --- 物理參數面板 ---
+const PHYS_DEFAULTS = {
+    thrustPower: 24, thrustExpo: 0.3, maxThrust: 28,
+    mass: 0.6, dragCoeff: 0.015, angularDrag: 15,
+    rates: 1.2, superRate: 0.7, maxTiltAngle: 55
+};
+const PHYS_PRESETS = {
+    beginner: { thrustPower:18, thrustExpo:0.15, maxThrust:22, mass:0.5, dragCoeff:0.04, angularDrag:25, rates:0.6, superRate:0.3, maxTiltAngle:30 },
+    default:  { ...PHYS_DEFAULTS },
+    race:     { thrustPower:38, thrustExpo:0.5, maxThrust:50, mass:0.4, dragCoeff:0.008, angularDrag:8, rates:2.2, superRate:0.85, maxTiltAngle:75 },
+    exam:     { thrustPower:20, thrustExpo:0.2, maxThrust:24, mass:0.7, dragCoeff:0.025, angularDrag:20, rates:0.8, superRate:0.4, maxTiltAngle:35 }
+};
+
+const PP_PARAMS = [
+    { id:'thrustPower', key:'thrustPower', fmt: v => v.toFixed(0) },
+    { id:'thrustExpo',  key:'thrustExpo',  fmt: v => v.toFixed(2) },
+    { id:'maxThrust',   key:'maxThrust',   fmt: v => v.toFixed(0) },
+    { id:'mass',        key:'mass',        fmt: v => v.toFixed(2) },
+    { id:'dragCoeff',   key:'dragCoeff',   fmt: v => v.toFixed(3) },
+    { id:'angularDrag', key:'angularDrag', fmt: v => v.toFixed(1) },
+    { id:'rates',       key:'rates',       fmt: v => v.toFixed(2) },
+    { id:'superRate',   key:'superRate',   fmt: v => v.toFixed(2) },
+    { id:'maxTiltAngle',key:'maxTiltAngle',fmt: v => v.toFixed(0) + '°' },
+];
+
+function ppUpdateSliderBg(slider) {
+    const min = parseFloat(slider.min), max = parseFloat(slider.max), val = parseFloat(slider.value);
+    const pct = ((val - min) / (max - min) * 100).toFixed(1) + '%';
+    slider.style.setProperty('--pct', pct);
+}
+
+function ppApplyToConfig(values) {
+    for (const k of Object.keys(values)) CONFIG[k] = values[k];
+}
+
+function ppRefreshUI(values) {
+    for (const p of PP_PARAMS) {
+        const slider = document.getElementById('pp-' + p.id);
+        const valEl  = document.getElementById('ppv-' + p.id);
+        if (!slider || !valEl) continue;
+        slider.value = values[p.key];
+        valEl.textContent = p.fmt(parseFloat(values[p.key]));
+        ppUpdateSliderBg(slider);
+    }
+}
+
+function ppSetPreset(name) {
+    const preset = PHYS_PRESETS[name];
+    if (!preset) return;
+    ppApplyToConfig(preset);
+    ppRefreshUI(preset);
+    document.querySelectorAll('.pp-preset').forEach(b => b.classList.toggle('active', b.dataset.preset === name));
+}
+
+(function initPhysPanel() {
+    const toggle = document.getElementById('phys-toggle');
+    const panel  = document.getElementById('phys-panel');
+    if (!toggle || !panel) return;
+
+    // 齒輪開關
+    toggle.addEventListener('click', () => {
+        const open = panel.classList.toggle('open');
+        toggle.classList.toggle('active', open);
+    });
+
+    // 滑桿即時更新
+    for (const p of PP_PARAMS) {
+        const slider = document.getElementById('pp-' + p.id);
+        const valEl  = document.getElementById('ppv-' + p.id);
+        if (!slider || !valEl) continue;
+        ppUpdateSliderBg(slider);
+        slider.addEventListener('input', () => {
+            const v = parseFloat(slider.value);
+            CONFIG[p.key] = v;
+            valEl.textContent = p.fmt(v);
+            ppUpdateSliderBg(slider);
+            // 清除 active preset（手動調整）
+            document.querySelectorAll('.pp-preset').forEach(b => b.classList.remove('active'));
+        });
+    }
+
+    // 預設按鈕
+    document.querySelectorAll('.pp-preset').forEach(btn => {
+        btn.addEventListener('click', () => ppSetPreset(btn.dataset.preset));
+    });
+
+    // 重置
+    document.getElementById('pp-reset')?.addEventListener('click', () => ppSetPreset('default'));
+})();
+
+// 進入遊戲時顯示齒輪，離開時隱藏
+function showPhysPanel(show) {
+    const toggle = document.getElementById('phys-toggle');
+    const panel  = document.getElementById('phys-panel');
+    if (!toggle || !panel) return;
+    toggle.style.display = show ? 'flex' : 'none';
+    if (!show) { panel.classList.remove('open'); toggle.classList.remove('active'); }
+}
 
 // --- 主迴圈 ---
 function animate() {
