@@ -179,6 +179,20 @@
             width:36px; text-align:right; font-size:11px;
             font-family:monospace; color:#00ffcc;
         }
+        .pp-advanced {
+            margin-top:4px; margin-bottom:8px;
+        }
+        .pp-advanced summary {
+            font-size:11px; color:#00ffcc66; cursor:pointer;
+            letter-spacing:1px; padding:6px 0; list-style:none;
+            display:flex; align-items:center; gap:6px;
+            border-top:1px solid #00ffcc11;
+        }
+        .pp-advanced summary::before { content:'▶'; font-size:9px; transition:transform 0.2s; }
+        .pp-advanced[open] summary::before { transform:rotate(90deg); }
+        .pp-advanced summary:hover { color:#00ffcc99; }
+        .pp-advanced[open] summary { color:#00ffcc88; margin-bottom:8px; }
+
         .pp-reset-btn {
             width:100%; margin-top:8px; padding:7px;
             background:transparent; border:1px solid #00ffcc33;
@@ -267,44 +281,44 @@
     </div>
 
     <!-- 物理參數面板 -->
-    <button id="phys-toggle" title="物理參數">⚙️</button>
+    <button id="phys-toggle" title="難易度調整">⚙️</button>
     <div id="phys-panel">
-        <h3>⚙️ 物理參數</h3>
+        <h3>⚙️ 飛行難易度</h3>
 
-        <!-- 預設配置 -->
-        <div class="pp-section">
-            <div class="pp-section-title">快速預設</div>
-            <div class="pp-preset-row">
-                <button class="pp-preset" data-preset="beginner">🐣 初學</button>
-                <button class="pp-preset active" data-preset="default">⚖️ 預設</button>
-                <button class="pp-preset" data-preset="race">🏁 競速</button>
-                <button class="pp-preset" data-preset="exam">📋 考試</button>
-            </div>
+        <!-- 快速預設 -->
+        <div class="pp-preset-row">
+            <button class="pp-preset" data-preset="beginner">🐣 初學</button>
+            <button class="pp-preset active" data-preset="default">⚖️ 標準</button>
+            <button class="pp-preset" data-preset="race">🏁 競速</button>
         </div>
 
-        <!-- 動力 -->
+        <!-- 3 個核心參數 -->
         <div class="pp-section">
-            <div class="pp-section-title">🔋 動力</div>
+            <div class="pp-row">
+                <span class="pp-label">靈敏度</span>
+                <input class="pp-slider" type="range" id="pp-rates" min="0.2" max="3.0" step="0.05" value="1.2">
+                <span class="pp-val" id="ppv-rates">1.20</span>
+            </div>
             <div class="pp-row">
                 <span class="pp-label">推力</span>
                 <input class="pp-slider" type="range" id="pp-thrustPower" min="8" max="50" step="0.5" value="24">
                 <span class="pp-val" id="ppv-thrustPower">24</span>
             </div>
             <div class="pp-row">
+                <span class="pp-label">最大傾角</span>
+                <input class="pp-slider" type="range" id="pp-maxTiltAngle" min="10" max="85" step="1" value="55">
+                <span class="pp-val" id="ppv-maxTiltAngle">55°</span>
+            </div>
+        </div>
+
+        <!-- 進階摺疊 -->
+        <details class="pp-advanced">
+            <summary>進階參數</summary>
+            <div class="pp-row">
                 <span class="pp-label">油門曲線</span>
                 <input class="pp-slider" type="range" id="pp-thrustExpo" min="0" max="0.9" step="0.05" value="0.3">
                 <span class="pp-val" id="ppv-thrustExpo">0.30</span>
             </div>
-            <div class="pp-row">
-                <span class="pp-label">最大推力</span>
-                <input class="pp-slider" type="range" id="pp-maxThrust" min="10" max="60" step="1" value="28">
-                <span class="pp-val" id="ppv-maxThrust">28</span>
-            </div>
-        </div>
-
-        <!-- 物理 -->
-        <div class="pp-section">
-            <div class="pp-section-title">⚖️ 飛行物理</div>
             <div class="pp-row">
                 <span class="pp-label">機體重量</span>
                 <input class="pp-slider" type="range" id="pp-mass" min="0.1" max="2.0" step="0.05" value="0.6">
@@ -320,29 +334,19 @@
                 <input class="pp-slider" type="range" id="pp-angularDrag" min="3" max="40" step="0.5" value="15">
                 <span class="pp-val" id="ppv-angularDrag">15</span>
             </div>
-        </div>
-
-        <!-- 操控 -->
-        <div class="pp-section">
-            <div class="pp-section-title">🎮 操控感</div>
-            <div class="pp-row">
-                <span class="pp-label">Rates</span>
-                <input class="pp-slider" type="range" id="pp-rates" min="0.2" max="3.0" step="0.05" value="1.2">
-                <span class="pp-val" id="ppv-rates">1.20</span>
-            </div>
             <div class="pp-row">
                 <span class="pp-label">Super Rate</span>
                 <input class="pp-slider" type="range" id="pp-superRate" min="0" max="1.0" step="0.05" value="0.7">
                 <span class="pp-val" id="ppv-superRate">0.70</span>
             </div>
             <div class="pp-row">
-                <span class="pp-label">最大傾角</span>
-                <input class="pp-slider" type="range" id="pp-maxTiltAngle" min="10" max="85" step="1" value="55">
-                <span class="pp-val" id="ppv-maxTiltAngle">55°</span>
+                <span class="pp-label">最大推力</span>
+                <input class="pp-slider" type="range" id="pp-maxThrust" min="10" max="60" step="1" value="28">
+                <span class="pp-val" id="ppv-maxThrust">28</span>
             </div>
-        </div>
+        </details>
 
-        <button class="pp-reset-btn" id="pp-reset">↩ 恢復預設值</button>
+        <button class="pp-reset-btn" id="pp-reset">↩ 恢復預設</button>
     </div>
 
     <div id="msg-overlay">
@@ -515,6 +519,6 @@
             if (tb) tb.style.display = 'none';
         }
     </script>
-    <script type="module" src="./src/main.js?v=20260329-1"></script>
+    <script type="module" src="./src/main.js?v=20260329-2"></script>
 </body>
 </html>
