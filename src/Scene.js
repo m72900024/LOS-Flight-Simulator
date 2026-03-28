@@ -279,14 +279,21 @@ export class GameScene {
         this.scene.add(this.droneGroup);
     }
 
-    updateDrone(pos, quat, throttle, crashIntensity = 0) {
+    updateDrone(pos, quat, throttle, crashIntensity = 0, armed = false) {
         this.droneGroup.position.copy(pos);
         this.droneGroup.quaternion.copy(quat);
         for(const pg of this.propellers){
-            pg.rotation.y += (0.5+throttle*2.0)*pg.userData.dir;
+            if (armed) {
+                // 解鎖時：最低轉速 idle（視覺上略轉），油門越高轉越快
+                pg.rotation.y += (0.15 + throttle * 2.5) * pg.userData.dir;
+            }
+            // 上鎖時螺旋槳完全靜止（rotation 不更新）
             for(const c of pg.children){
-                if(c.userData.isDisc) c.material.opacity=Math.min(0.35,throttle*0.5);
-                else if(c.userData.isBlade){c.material.opacity=Math.max(0.1,1-throttle*1.5);c.material.transparent=true;}
+                if(c.userData.isDisc) c.material.opacity = armed ? Math.min(0.35, throttle * 0.5) : 0;
+                else if(c.userData.isBlade){
+                    c.material.opacity = armed ? Math.max(0.1, 1 - throttle * 1.5) : 1;
+                    c.material.transparent = true;
+                }
             }
         }
         if(this.ledMesh) this.ledMesh.material.color.setHex((Date.now()&256)?0x00ff00:0x002200);

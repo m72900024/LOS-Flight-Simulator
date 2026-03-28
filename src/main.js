@@ -440,7 +440,7 @@ function animate() {
         const dt = Math.min(clock.getDelta(), 0.1);
         const inp = input.update();
         physics.update(dt, inp);
-        gameScene.updateDrone(physics.pos, physics.quat, inp.t, physics.crashIntensity);
+        gameScene.updateDrone(physics.pos, physics.quat, inp.t, physics.crashIntensity, inp.armed);
         if (audioEngine) audioEngine.updateMotor(inp.t, inp.armed);
         levelManager.checkWinCondition(physics.pos, dt);
 
