@@ -55,6 +55,11 @@ export class InputController {
             this.gamepadIndex = e.gamepad.index;
             window.dispatchEvent(new CustomEvent('gamepad-ready', { detail: { gamepad: e.gamepad } }));
         });
+        window.addEventListener("gamepaddisconnected", (e) => {
+            if (this.gamepadIndex === e.gamepad.index) {
+                this.gamepadIndex = null;
+            }
+        });
     }
 
     updateConfig(newAxes, newInverts) {

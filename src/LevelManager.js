@@ -26,7 +26,11 @@ export class LevelManager {
         this.activeTarget = null;
 
         // localStorage best times
-        this.bestTimes = JSON.parse(localStorage.getItem('flightSimBest') || '{}');
+        try {
+            this.bestTimes = JSON.parse(localStorage.getItem('flightSimBest') || '{}');
+        } catch (e) {
+            this.bestTimes = {};
+        }
     }
 
     saveBest(level, time) {

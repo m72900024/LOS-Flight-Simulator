@@ -8,6 +8,12 @@ import { touchInput } from './TouchInput.js';
 const input = new InputController();
 let physics, gameScene, levelManager, audioEngine;
 const clock = new THREE.Clock();
+const MODE_NAMES = {
+    [FLIGHT_MODES.ANGLE]: '自穩',
+    [FLIGHT_MODES.HORIZON]: '半自穩',
+    [FLIGHT_MODES.ACRO]: '手動',
+    [FLIGHT_MODES.ALT_HOLD]: '定高'
+};
 let appState = 'SETUP';
 let isGamepadInit = false;
 let selectedLevel = 1;
@@ -142,7 +148,12 @@ function showLevelSelect() {
 
     const grid = document.getElementById('level-grid');
     grid.innerHTML = '';
-    const bestTimes = JSON.parse(localStorage.getItem('flightSimBest') || '{}');
+    let bestTimes;
+    try {
+        bestTimes = JSON.parse(localStorage.getItem('flightSimBest') || '{}');
+    } catch (e) {
+        bestTimes = {};
+    }
     const unlockedLevel = LevelManager.getUnlockedLevel();
 
     let doneCount = 0;
@@ -433,7 +444,7 @@ function updateSetupUI() {
     armTxt.innerText = state.armed ? '已解鎖' : '未解鎖';
     armTxt.style.color = state.armed ? '#00ffcc' : '#ff3333';
 
-    const mStr = {[FLIGHT_MODES.ANGLE]:'自穩',[FLIGHT_MODES.HORIZON]:'半自穩',[FLIGHT_MODES.ACRO]:'手動',[FLIGHT_MODES.ALT_HOLD]:'定高'}[state.flightMode]||'?';
+    const mStr = MODE_NAMES[state.flightMode] || '?';
     document.getElementById('mode-display').innerText = mStr;
     document.getElementById('txt-mode').innerText = mStr;
 }
@@ -586,14 +597,13 @@ function animate() {
         domCache.statThr.innerText = `THR: ${Math.round(inp.t*100)}%`;
         domCache.statAlt.innerText = `ALT: ${physics.pos.y.toFixed(1)}m`;
 
-        const modeNames = {[FLIGHT_MODES.ANGLE]:'自穩',[FLIGHT_MODES.HORIZON]:'半自穩',[FLIGHT_MODES.ACRO]:'手動',[FLIGHT_MODES.ALT_HOLD]:'定高'};
-        domCache.statMode.innerText = 'MODE: '+(modeNames[inp.flightMode]||'?');
+        domCache.statMode.innerText = 'MODE: '+(MODE_NAMES[inp.flightMode]||'?');
         domCache.statArmed.innerText = inp.armed ? 'ARMED' : 'DISARMED';
         domCache.statArmed.style.color = inp.armed ? '#00ff00' : '#ff3333';
         domCache.statInput.innerText = input.useTouch ? '📱 觸控' : input.useHybrid ? '🎮+⌨️ 混合' : input.useKeyboard ? '⌨️ 鍵盤' : '🎮 搖桿';
 
         // 高度警告
-        if (physics.pos.y > CONFIG.maxHeight*0.8) { domCache.statAlt.style.color='#ff3333'; domCache.statAlt.innerText+=' ⚠️'; }
+        if (physics.pos.y > CONFIG.maxHeight*0.8) { domCache.statAlt.style.color='#ff3333'; domCache.statAlt.innerText = `ALT: ${physics.pos.y.toFixed(1)}m ⚠️`; }
         else if (physics.pos.y > CONFIG.maxHeight*0.5) domCache.statAlt.style.color='#ffaa00';
         else domCache.statAlt.style.color='#aaa';
 
