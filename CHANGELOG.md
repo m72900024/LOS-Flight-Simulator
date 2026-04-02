@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.2.1（2026-04-02）
+- 修復高度警告 ⚠️ 每幀累加的顯示 bug
+- localStorage 讀取加 try-catch，防止損壞資料導致 crash
+- modeNames 提取為模組級常數，減少每幀物件分配與 GC 壓力
+- 新增 gamepaddisconnected 監聽器，搖桿斷線時清除過期引用
+
 ## v2.2（2026-03-01）
 - L8 術科模擬考試：第 8 關改為台灣 CAA 無人機基本級術科模擬考試（20 步驟），涵蓋定點起降、四面停懸、矩形航線順逆時針
 - 飛行模式中文名稱修正：ANGLE=自穩、HORIZON=半自穩、ACRO=手動、ALT_HOLD=定高
