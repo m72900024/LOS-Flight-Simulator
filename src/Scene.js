@@ -12,7 +12,7 @@ export class GameScene {
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3));
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(this.renderer.domElement);
@@ -33,7 +33,7 @@ export class GameScene {
         const dir = new THREE.DirectionalLight(0xffffff, 1.0);
         dir.position.set(30, 60, 40);
         dir.castShadow = true;
-        dir.shadow.mapSize.set(2048, 2048);
+        dir.shadow.mapSize.set(4096, 4096);
         const sc = dir.shadow.camera;
         sc.near=0.5; sc.far=200; sc.left=-60; sc.right=60; sc.top=60; sc.bottom=-60;
         this.scene.add(dir);
@@ -44,7 +44,7 @@ export class GameScene {
         // 草地
         const ground = new THREE.Mesh(
             new THREE.PlaneGeometry(300, 300),
-            new THREE.MeshStandardMaterial({ color: 0x3a7d2a, roughness: 0.9 })
+            new THREE.MeshStandardMaterial({ color: 0x2ecc71, roughness: 0.8 })
         );
         ground.rotation.x = -Math.PI/2;
         ground.receiveShadow = true;
