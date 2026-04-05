@@ -532,13 +532,13 @@ export class GameScene {
         this.scene.add(this.droneGroup);
     }
 
-    updateDrone(pos, quat, throttle, crashIntensity = 0, armed = false) {
+    updateDrone(pos, quat, throttle, crashIntensity = 0, armed = false, dt = 1/60) {
         this.droneGroup.position.copy(pos);
         this.droneGroup.quaternion.copy(quat);
 
         for (const pg of this.propellers) {
             if (armed) {
-                pg.rotation.y += (0.15 + throttle * 2.5) * pg.userData.dir;
+                pg.rotation.y += (0.15 + throttle * 2.5) * pg.userData.dir * dt * 60;
             }
             for (const c of pg.children) {
                 if (c.userData.isDisc) {
@@ -569,7 +569,7 @@ export class GameScene {
 
         // 雲飄移
         for (const cloud of this.clouds) {
-            cloud.position.x += 0.0018;
+            cloud.position.x += 0.0018 * dt * 60;
             if (cloud.position.x > 150) cloud.position.x = -150;
         }
 
@@ -580,7 +580,7 @@ export class GameScene {
         }
 
         // LOS 第三人稱鏡頭
-        this.cameraTarget.lerp(pos, 0.08);
+        this.cameraTarget.lerp(pos, 1 - Math.pow(1 - 0.08, dt * 60));
         let camX = 0, camY = 2.5, camZ = 10;
 
         if (crashIntensity > 0.01) {

@@ -17,6 +17,26 @@ export class PhysicsEngine {
         this._tmpEuler = new THREE.Euler();
     }
 
+    _applyAngleAttitude(input, maxRate, dt) {
+        const maxTilt = THREE.MathUtils.degToRad(CONFIG.maxTiltAngle);
+        const targetPitch = input.p * maxTilt;
+        const targetRoll = -input.r * maxTilt;
+
+        this._tmpEuler.setFromQuaternion(this.quat, 'YXZ');
+
+        const kP = 12.0, kD = 0.6;
+        this.rotVel.x = kP * (targetPitch - this._tmpEuler.x) - kD * this.rotVel.x;
+        this.rotVel.z = kP * (targetRoll  - this._tmpEuler.z) - kD * this.rotVel.z;
+        this.rotVel.y = input.y * maxRate * 0.7;
+
+        const theta = this.rotVel.length() * dt;
+        if (theta > 0.0001) {
+            this._tmpVec2.copy(this.rotVel).normalize();
+            this._tmpQuat.setFromAxisAngle(this._tmpVec2, theta);
+            this.quat.multiply(this._tmpQuat);
+        }
+    }
+
     reset() {
         this.pos.set(0, 0.2, 0);
         this.vel.set(0, 0, 0);
@@ -114,64 +134,17 @@ export class PhysicsEngine {
         
         if (input.flightMode === FLIGHT_MODES.ACRO) {
             // [手動模式] Betaflight 風格角速度控制
-            // Reuse tmpVec1 for target rotation velocity
             this._tmpVec1.set(
                 Math.sign(input.p) * calcRate(input.p),
                 Math.sign(input.y) * calcRate(input.y),
                 -Math.sign(input.r) * calcRate(input.r)
             );
-            // 角速度阻尼：鬆桿後自然停轉
             const angDrag = CONFIG.angularDrag || 5;
             this.rotVel.lerp(this._tmpVec1, angDrag * dt);
 
-        } else if (input.flightMode === FLIGHT_MODES.ANGLE) {
-            // [自穩模式] Spring-damper attitude control
-            const maxTilt = THREE.MathUtils.degToRad(CONFIG.maxTiltAngle);
-            const targetPitch = input.p * maxTilt;
-            const targetRoll = -input.r * maxTilt;
-
-            this._tmpEuler.setFromQuaternion(this.quat, 'YXZ');
-
-            // Spring-damper: angVel = kP * error - kD * currentAngVel
-            const kP = 12.0, kD = 0.6;
-            const pitchError = targetPitch - this._tmpEuler.x;
-            const rollError  = targetRoll  - this._tmpEuler.z;
-            this.rotVel.x = kP * pitchError - kD * this.rotVel.x;
-            this.rotVel.z = kP * rollError  - kD * this.rotVel.z;
-
-            // Yaw: rate control
-            this.rotVel.y = input.y * maxRate * 0.7;
-
-            // Apply rotation via rotVel (same as ACRO) - reuse tmpVec2 and tmpQuat
-            const theta = this.rotVel.length() * dt;
-            if (theta > 0.0001) {
-                this._tmpVec2.copy(this.rotVel).normalize();
-                this._tmpQuat.setFromAxisAngle(this._tmpVec2, theta);
-                this.quat.multiply(this._tmpQuat);
-            }
-
-        } else if (input.flightMode === FLIGHT_MODES.ALT_HOLD) {
-            // [定高模式] Spring-damper attitude (same as ANGLE)
-            const maxTilt = THREE.MathUtils.degToRad(CONFIG.maxTiltAngle);
-            const targetPitch = input.p * maxTilt;
-            const targetRoll = -input.r * maxTilt;
-
-            this._tmpEuler.setFromQuaternion(this.quat, 'YXZ');
-
-            const kP = 12.0, kD = 0.6;
-            const pitchError = targetPitch - this._tmpEuler.x;
-            const rollError  = targetRoll  - this._tmpEuler.z;
-            this.rotVel.x = kP * pitchError - kD * this.rotVel.x;
-            this.rotVel.z = kP * rollError  - kD * this.rotVel.z;
-
-            this.rotVel.y = input.y * maxRate * 0.7;
-
-            const theta = this.rotVel.length() * dt;
-            if (theta > 0.0001) {
-                this._tmpVec2.copy(this.rotVel).normalize();
-                this._tmpQuat.setFromAxisAngle(this._tmpVec2, theta);
-                this.quat.multiply(this._tmpQuat);
-            }
+        } else if (input.flightMode === FLIGHT_MODES.ANGLE || input.flightMode === FLIGHT_MODES.ALT_HOLD) {
+            // [自穩/定高模式] Spring-damper attitude control
+            this._applyAngleAttitude(input, maxRate, dt);
 
         } else if (input.flightMode === FLIGHT_MODES.HORIZON) {
             // [半自穩模式] Betaflight-style HORIZON blend
@@ -227,6 +200,16 @@ export class PhysicsEngine {
         // 高度軟限制（超過最大高度後推力遞減）
         if (this.pos.y > CONFIG.maxHeight) {
             this.vel.y *= 0.95; // 逐漸減速
+        }
+
+        // 水平邊界軟限制（超過 80m 後逐漸減速回拉）
+        const maxHorizontal = 80;
+        const hDist = Math.sqrt(this.pos.x * this.pos.x + this.pos.z * this.pos.z);
+        if (hDist > maxHorizontal) {
+            const overRatio = (hDist - maxHorizontal) / 20; // 20m 緩衝區
+            const pullback = Math.min(overRatio * 2.0, 5.0);
+            this.vel.x -= (this.pos.x / hDist) * pullback * dt;
+            this.vel.z -= (this.pos.z / hDist) * pullback * dt;
         }
         
         this.quat.normalize();

@@ -21,6 +21,8 @@ let selectedLevel = 1;
 class AudioEngine {
     constructor() {
         this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        // Resume AudioContext to comply with browser autoplay policy
+        if (this.ctx.state === 'suspended') this.ctx.resume();
         this.osc = null;
         this.gain = null;
         this._initMotor();
@@ -544,6 +546,7 @@ function ppSetPreset(name) {
     toggle.addEventListener('click', () => {
         const open = panel.classList.toggle('open');
         toggle.classList.toggle('active', open);
+        panel.style.display = open ? 'flex' : 'none';
     });
 
     // 滑桿即時更新
@@ -590,9 +593,9 @@ function animate() {
         const dt = Math.min(clock.getDelta(), 0.1);
         const inp = input.update();
         physics.update(dt, inp);
-        gameScene.updateDrone(physics.pos, physics.quat, inp.t, physics.crashIntensity, inp.armed);
+        gameScene.updateDrone(physics.pos, physics.quat, inp.t, physics.crashIntensity, inp.armed, dt);
         if (audioEngine) audioEngine.updateMotor(inp.t, inp.armed);
-        levelManager.checkWinCondition(physics.pos, dt);
+        levelManager.checkWinCondition(physics.pos, dt, physics.vel);
 
         domCache.statThr.innerText = `THR: ${Math.round(inp.t*100)}%`;
         domCache.statAlt.innerText = `ALT: ${physics.pos.y.toFixed(1)}m`;
@@ -618,7 +621,7 @@ function animate() {
         // Compass heading from drone quaternion
         _gameLoopEuler.setFromQuaternion(physics.quat, 'YXZ');
         const euler = _gameLoopEuler;
-        let yawDeg = THREE.MathUtils.radToDeg(euler.y);
+        let yawDeg = -THREE.MathUtils.radToDeg(euler.y); // negate: Three.js Y rotation is CCW-positive
         yawDeg = ((yawDeg % 360) + 360) % 360; // normalize to 0-360
         const dirs = ['N','NE','E','SE','S','SW','W','NW'];
         const dirIdx = Math.round(yawDeg / 45) % 8;

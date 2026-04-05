@@ -7,7 +7,7 @@ export const CONFIG = {
     maxTiltAngle: 55, droneScale: 3.0,
     axes: { thrust: 1, yaw: 0, pitch: 2, roll: 5, arm: -1, mode: -1 },
     invert: { t: false, r: false, e: false, a: false },
-    calibration: { roll: 0.00392, pitch: 0.00392, yaw: 0.00392, thrust: 0.00392 },
+    calibration: { roll: 0, pitch: 0, yaw: 0, thrust: 0 },
     endpoints: {
         thrust: { min: -1, max: 1 }, yaw: { min: -1, max: 1 },
         pitch: { min: -1, max: 1 }, roll: { min: -1, max: 1 }

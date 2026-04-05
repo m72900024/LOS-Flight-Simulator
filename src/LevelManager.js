@@ -66,6 +66,21 @@ export class LevelManager {
         this._reusableTarget = new THREE.Vector3(); // reused in checkWinCondition
 
         const grp = this.scene.levelGroup;
+        // Dispose all geometries, materials, and textures to prevent GPU memory leak
+        grp.traverse(obj => {
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) {
+                if (Array.isArray(obj.material)) {
+                    obj.material.forEach(m => {
+                        if (m.map) m.map.dispose();
+                        m.dispose();
+                    });
+                } else {
+                    if (obj.material.map) obj.material.map.dispose();
+                    obj.material.dispose();
+                }
+            }
+        });
         while (grp.children.length > 0) grp.remove(grp.children[0]);
 
         // Create guide line (drone → active waypoint)
@@ -379,7 +394,7 @@ export class LevelManager {
             `步驟 1/${this._examSteps.length}: ${this._examSteps[0].label}`;
     }
 
-    _checkExam(dronePos, dt, pFill) {
+    _checkExam(dronePos, dt, pFill, droneVel) {
         const step = this._examSteps[this._examStepIndex];
         if (!step) return;
         const dx = dronePos.x - step.pos[0];
@@ -387,7 +402,9 @@ export class LevelManager {
         const hDist = Math.sqrt(dx * dx + dz * dz);
 
         if (step.type === 'land') {
-            if (dronePos.y < 0.3 && hDist < 2) this._advanceExamStep();
+            // Require low speed to prevent crash-landing from passing
+            const speed = droneVel ? droneVel.length() : 0;
+            if (dronePos.y < 0.3 && hDist < 2 && speed < 1.5) this._advanceExamStep();
         } else {
             const vDist = Math.abs(dronePos.y - step.pos[1]);
             if (hDist < 2 && vDist < 1) {
@@ -412,7 +429,7 @@ export class LevelManager {
         }
     }
 
-    checkWinCondition(dronePos, dt) {
+    checkWinCondition(dronePos, dt, droneVel) {
         if (this.isComplete) return true;
         this.elapsed += dt;
         document.getElementById('stat-time').innerText = this.elapsed.toFixed(1) + 's';
@@ -517,7 +534,7 @@ export class LevelManager {
                 this.activeTarget = target;
                 this._updateGuideLine(dronePos, target);
             }
-            this._checkExam(dronePos, dt, pFill);
+            this._checkExam(dronePos, dt, pFill, droneVel);
         }
     }
 
