@@ -142,7 +142,7 @@ export class GameScene {
         // 主地面
         const ground = new THREE.Mesh(
             new THREE.PlaneGeometry(300, 300),
-            new THREE.MeshStandardMaterial({ color: 0x2ecc71, roughness: 0.8 })
+            new THREE.MeshStandardMaterial({ color: 0x3de651, roughness: 0.8 })
         );
         ground.rotation.x = -Math.PI / 2;
         ground.receiveShadow = true;
@@ -151,7 +151,7 @@ export class GameScene {
         // 飛行區內圈（略淺）
         const innerGround = new THREE.Mesh(
             new THREE.PlaneGeometry(44, 44),
-            new THREE.MeshStandardMaterial({ color: 0x55e088, roughness: 0.75 })
+            new THREE.MeshStandardMaterial({ color: 0x66f59a, roughness: 0.75 })
         );
         innerGround.rotation.x = -Math.PI / 2;
         innerGround.position.y = 0.005;
