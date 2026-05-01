@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.5.3（2026-05-02）
+- 內八/外八手勢門檻從 0.7 放寬到 **0.55**，較容易達成
+- 設定畫面解鎖文字加 hold 進度顯示（🤘 解鎖中 XX% / 🤙 上鎖中 XX%）
+- 右下角新增 build tag（`build: 20260502-armprog`），方便驗證瀏覽器有抓到新版（看不到舊版號就是抓到了）
+- InputController 補初始化 `_prevBtn0` / `_armHoldStart` / `_disarmHoldStart`，避免首幀殘值
+- cache buster 更新為 `v=20260502-armprog`
+
 ## v2.5.2（2026-05-02）
 - 新增搖桿按鈕解鎖：按鈕 0（Xbox A / PS X / 多數手把主按鈕）按一下切換解鎖 / 上鎖
 - 設定畫面新增解鎖方式說明卡（按鈕 / 內八手勢 / 外八手勢 / Space）

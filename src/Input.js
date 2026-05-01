@@ -16,6 +16,9 @@ export class InputController {
         this.useHybrid = false;   // 混合模式（左手把+鍵盤）
         this._hybridPitch = 0;    // 混合模式俯仰平滑值
         this._hybridRoll = 0;     // 混合模式橫滾平滑值
+        this._prevBtn0 = false;   // gamepad 按鈕 0 上一幀狀態（rising-edge 偵測）
+        this._armHoldStart = null;
+        this._disarmHoldStart = null;
 
         // Link touch input to our state for arm/mode buttons
         touchInput.linkState(this.state);
@@ -232,17 +235,29 @@ export class InputController {
             const pitchRaw = gp.axes[ax.pitch] || 0;
             const rollRaw = gp.axes[ax.roll] || 0;
 
-            // 內八解鎖：左搖桿右下 + 右搖桿左下 hold 2s
-            const thrDown  = thrRaw > 0.7;      // 左搖桿往下
-            const yawRight = yawRaw > 0.7;       // 左搖桿往右
-            const pitchDown = pitchRaw > 0.7;    // 右搖桿往下
-            const rollLeft  = rollRaw < -0.7;    // 右搖桿往左
+            // 內八解鎖：左搖桿右下 + 右搖桿左下 hold 2s（門檻放寬到 0.55）
+            const TH = 0.55;
+            const thrDown  = thrRaw > TH;
+            const yawRight = yawRaw > TH;
+            const pitchDown = pitchRaw > TH;
+            const rollLeft  = rollRaw < -TH;
             const isInnerCross = thrDown && yawRight && pitchDown && rollLeft;
 
             // 外八上鎖：左搖桿左下 + 右搖桿右下 hold 2s
-            const yawLeft  = yawRaw < -0.7;
-            const rollRight = rollRaw > 0.7;
+            const yawLeft  = yawRaw < -TH;
+            const rollRight = rollRaw > TH;
             const isOuterCross = thrDown && yawLeft && pitchDown && rollRight;
+
+            // 對外暴露 hold 進度（0~1）給 UI 顯示
+            if (isInnerCross && !this.state.armed) {
+                this.state.armProgress = this._armHoldStart
+                    ? Math.min(1, (now_t - this._armHoldStart) / 2000) : 0;
+            } else if (isOuterCross && this.state.armed) {
+                this.state.armProgress = this._disarmHoldStart
+                    ? -Math.min(1, (now_t - this._disarmHoldStart) / 2000) : 0;
+            } else {
+                this.state.armProgress = 0;
+            }
 
             if (!this.state.armed && isInnerCross) {
                 if (!this._armHoldStart) this._armHoldStart = now_t;

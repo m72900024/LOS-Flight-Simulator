@@ -472,8 +472,16 @@ function updateSetupUI() {
     document.getElementById('txt-rol').innerText = state.r.toFixed(2);
 
     const armTxt = document.getElementById('txt-arm');
-    armTxt.innerText = state.armed ? '已解鎖' : '未解鎖';
-    armTxt.style.color = state.armed ? '#00ffcc' : '#ff3333';
+    if (state.armProgress && state.armProgress > 0) {
+        armTxt.innerText = `🤘 解鎖中 ${Math.round(state.armProgress * 100)}%`;
+        armTxt.style.color = '#ffaa00';
+    } else if (state.armProgress && state.armProgress < 0) {
+        armTxt.innerText = `🤙 上鎖中 ${Math.round(-state.armProgress * 100)}%`;
+        armTxt.style.color = '#ffaa00';
+    } else {
+        armTxt.innerText = state.armed ? '已解鎖' : '未解鎖';
+        armTxt.style.color = state.armed ? '#00ffcc' : '#ff3333';
+    }
 
     const mStr = MODE_NAMES[state.flightMode] || '?';
     document.getElementById('mode-display').innerText = mStr;
