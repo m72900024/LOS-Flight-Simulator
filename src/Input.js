@@ -215,7 +215,18 @@ export class InputController {
         if (ax.arm === -1 || ax.arm === undefined) {
             // 初始化時預設解鎖
             if (this.state.armed === undefined) this.state.armed = true;
-            
+
+            // 按鈕 0（Xbox A / PS X / 多數手把預設按鈕）瞬間切換解鎖
+            const btn0 = (gp.buttons[0] && gp.buttons[0].pressed) || false;
+            if (btn0 && !this._prevBtn0) {
+                this.state.armed = !this.state.armed;
+                if (!this.state.armed) this.state.t = (CONFIG.joystickType === 'centering') ? 0.5 : 0;
+                window.dispatchEvent(new CustomEvent('input-mode-change', {
+                    detail: this.state.armed ? '🔓 已解鎖' : '🔒 已上鎖'
+                }));
+            }
+            this._prevBtn0 = btn0;
+
             const thrRaw = gp.axes[ax.thrust] || 0;
             const yawRaw = gp.axes[ax.yaw] || 0;
             const pitchRaw = gp.axes[ax.pitch] || 0;
