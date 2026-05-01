@@ -5,9 +5,6 @@ export const CONFIG = {
     angularDrag: 15, hardDeck: 0.05, maxHeight: 50,
     thrustPower: 24, thrustExpo: 0.3, rates: 1.2, superRate: 0.7,
     maxTiltAngle: 55, droneScale: 3.0,
-    // v2.4 borrowed features (gated; pending external attribution review)
-    _v24Features: false,
-    wind: { level: 0 },
     axes: { thrust: 1, yaw: 0, pitch: 2, roll: 5, arm: -1, mode: -1 },
     invert: { t: false, r: false, e: false, a: false },
     calibration: { roll: 0, pitch: 0, yaw: 0, thrust: 0 },

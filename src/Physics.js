@@ -9,44 +9,12 @@ export class PhysicsEngine {
         this.crashIntensity = 0;
         this.altHoldTarget = null;
 
-        // 風力狀態（基本風 + 亂流 + 陣風）
-        this._windTimer = 0;
-        this._windCurrent = new THREE.Vector3(0, 0, 0);
-        this._windTarget = new THREE.Vector3(0, 0, 0);
-
         // Pre-allocated temporary objects to reduce GC pressure
         this._tmpVec1 = new THREE.Vector3();
         this._tmpVec2 = new THREE.Vector3();
         this._tmpVec3 = new THREE.Vector3();
         this._tmpQuat = new THREE.Quaternion();
         this._tmpEuler = new THREE.Euler();
-    }
-
-    _applyWind(dt, force) {
-        if (!CONFIG._v24Features) return;
-        const level = (CONFIG.wind && CONFIG.wind.level) || 0;
-        if (level === 0) {
-            this._windCurrent.set(0, 0, 0);
-            return;
-        }
-        // 每 0.8~1.6 秒換一次目標陣風（亂流感）
-        this._windTimer -= dt;
-        if (this._windTimer <= 0) {
-            this._windTimer = 0.8 + Math.random() * 0.8;
-            const strength = level * 0.20;
-            const angle = Math.random() * Math.PI * 2;
-            this._windTarget.set(
-                Math.cos(angle) * strength,
-                (Math.random() - 0.5) * strength * 0.25,
-                Math.sin(angle) * strength
-            );
-        }
-        // 平滑插值（避免硬切感）
-        this._windCurrent.lerp(this._windTarget, Math.min(1, 1.5 * dt));
-        // 加到合力上：F_wind = m * a_wind
-        force.x += this._windCurrent.x * CONFIG.mass;
-        force.y += this._windCurrent.y * CONFIG.mass;
-        force.z += this._windCurrent.z * CONFIG.mass;
     }
 
     _applyAngleAttitude(input, maxRate, dt) {
@@ -125,11 +93,6 @@ export class PhysicsEngine {
             // Reuse tmpVec2 for drag calculation
             this._tmpVec2.copy(this.vel).normalize().multiplyScalar(-CONFIG.dragCoeff * speed * speed);
             force.add(this._tmpVec2);
-        }
-
-        // 環境風力（地面貼近時減弱，模擬地形遮蔽）
-        if (this.pos.y > 0.3) {
-            this._applyWind(dt, force);
         }
         
         // Reuse tmpVec3 for acceleration

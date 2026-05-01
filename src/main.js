@@ -395,12 +395,8 @@ function startGame() {
         statInput: document.getElementById('stat-input'),
         statDist: document.getElementById('stat-dist'),
         statHeading: document.getElementById('stat-heading'),
-        statPos: document.getElementById('stat-pos'),
-        statWind: document.getElementById('stat-wind'),
-        levelTitle: document.getElementById('level-title'),
-        radar: document.getElementById('radar')
+        levelTitle: document.getElementById('level-title')
     };
-    domCache.radarCtx = domCache.radar ? domCache.radar.getContext('2d') : null;
     
     if (input.useTouch) {
         touchInput.show();
@@ -587,68 +583,6 @@ function showPhysPanel(show) {
     if (!show) { panel.classList.remove('open'); toggle.classList.remove('active'); }
 }
 
-// --- 右下雷達（Top-down 全域場地視圖）---
-function drawRadar(pos, yawDeg) {
-    const ctx = domCache.radarCtx;
-    if (!ctx) return;
-    const W = domCache.radar.width, H = domCache.radar.height;
-    const cx = W / 2, cy = H / 2;
-    // 1 px = 0.4m → 半徑 (W/2)*0.4 ≈ 28m 顯示範圍，足夠涵蓋雙圓考場與一般飛行
-    const px = 0.4;
-    const toX = (wx) => cx + wx / px;
-    const toY = (wz) => cy + wz / px;
-
-    ctx.clearRect(0, 0, W, H);
-
-    // 背景十字
-    ctx.strokeStyle = 'rgba(255,255,255,0.10)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, cy); ctx.lineTo(W, cy);
-    ctx.moveTo(cx, 0); ctx.lineTo(cx, H);
-    ctx.stroke();
-
-    // 雙圓考場（同 Scene.js 的 4m / 6m / 8m）
-    [-6, 6].forEach(centerX => {
-        const sx = toX(centerX), sy = toY(0);
-        // 4m / 8m 螢光綠
-        ctx.strokeStyle = 'rgba(192,255,96,0.65)';
-        ctx.beginPath(); ctx.arc(sx, sy, 4 / px, 0, Math.PI * 2); ctx.stroke();
-        ctx.beginPath(); ctx.arc(sx, sy, 8 / px, 0, Math.PI * 2); ctx.stroke();
-        // 6m 藍虛線
-        ctx.strokeStyle = 'rgba(102,187,255,0.55)';
-        ctx.setLineDash([3, 2]);
-        ctx.beginPath(); ctx.arc(sx, sy, 6 / px, 0, Math.PI * 2); ctx.stroke();
-        ctx.setLineDash([]);
-    });
-
-    // H 點
-    ctx.fillStyle = 'rgba(255,255,255,0.85)';
-    ctx.font = 'bold 11px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('H', toX(0), toY(0));
-
-    // 無人機（綠點 + 機頭朝向箭頭）
-    const dx = toX(pos.x), dy = toY(pos.z);
-    const headingRad = -yawDeg * Math.PI / 180; // 反轉 yaw 對應 Canvas Y 朝下
-    ctx.fillStyle = '#00ff66';
-    ctx.beginPath(); ctx.arc(dx, dy, 3.5, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#00ff66';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(dx, dy);
-    ctx.lineTo(dx + Math.sin(headingRad) * 9, dy - Math.cos(headingRad) * 9);
-    ctx.stroke();
-    ctx.lineWidth = 1;
-
-    // 標題
-    ctx.fillStyle = 'rgba(0,255,204,0.6)';
-    ctx.font = '9px sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('RADAR', 6, 12);
-}
-
 // --- 主迴圈 ---
 function animate() {
     requestAnimationFrame(animate);
@@ -693,18 +627,6 @@ function animate() {
         const dirIdx = Math.round(yawDeg / 45) % 8;
         domCache.statHeading.innerText = `方向: ${dirs[dirIdx]}`;
 
-        // 座標 + 風力 + 雷達（v2.4，目前停用）
-        if (CONFIG._v24Features) {
-            if (domCache.statPos) {
-                domCache.statPos.innerText = `X: ${physics.pos.x.toFixed(1)}   Z: ${physics.pos.z.toFixed(1)}`;
-            }
-            if (domCache.statWind) {
-                const wl = (CONFIG.wind && CONFIG.wind.level) || 0;
-                domCache.statWind.innerText = `🌬 風: ${wl}`;
-                domCache.statWind.style.color = wl === 0 ? '#888' : (wl < 4 ? '#ffcc00' : '#ff5500');
-            }
-            drawRadar(physics.pos, yawDeg);
-        }
 
         gameScene.render();
       } catch(e) {

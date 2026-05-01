@@ -250,8 +250,6 @@
             .lc-desc { font-size:9px; }
             #hud-top { font-size:12px; padding:8px 10px; }
             #level-title { font-size:18px; }
-            #radar { width:90px !important; height:90px !important; bottom:10px; right:10px; }
-            #stat-pos { display:none; }
         }
     </style>
 </head>
@@ -259,20 +257,12 @@
 <div id='crash-overlay' style='position:fixed;top:0;left:0;width:100%;height:100%;background:red;opacity:0;pointer-events:none;z-index:999;transition:opacity 0.1s;'></div>
 
     <div id="ui-layer">
-        <canvas id="radar" width="140" height="140"
-                style="position:absolute;bottom:18px;right:18px;
-                       background:rgba(6,12,10,0.78);
-                       border:1px solid #00ffcc55;border-radius:10px;
-                       box-shadow:0 0 12px rgba(0,255,204,0.18);
-                       pointer-events:none;z-index:5;display:none;"></canvas>
         <div id="hud-top">
             <div style="text-align:left;">
                 <div id="stat-thr">THR: 0%</div>
                 <div id="stat-mode" style="font-size:12px;color:#88ff88;">MODE: 自穩</div>
                 <div id="stat-input" style="font-size:11px;color:#aaa;">⌨️ 鍵盤</div>
                 <div id="stat-armed" style="font-size:12px;color:#ff3333;">DISARMED</div>
-                <div id="stat-pos" style="font-size:11px;color:#aaa;margin-top:2px;display:none;">X: 0.0 &nbsp; Z: 0.0</div>
-                <div id="stat-wind" style="font-size:12px;color:#aaa;display:none;">🌬 風: 0</div>
             </div>
             <div id="center-info">
                 <div id="level-title">LEVEL 1</div>
@@ -529,6 +519,6 @@
             if (tb) tb.style.display = 'none';
         }
     </script>
-    <script type="module" src="./src/main.js?v=20260501-gated"></script>
+    <script type="module" src="./src/main.js?v=20260502-clean"></script>
 </body>
 </html>

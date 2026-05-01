@@ -46,13 +46,6 @@ export class InputController {
             if (e.code === 'KeyR') {
                 window.dispatchEvent(new Event('reset-drone'));
             }
-            // [ / ] 切換環境風力等級（0-9）— v2.4，目前停用
-            if (CONFIG._v24Features && (e.code === 'BracketLeft' || e.code === 'BracketRight')) {
-                if (!CONFIG.wind) CONFIG.wind = { level: 0 };
-                const delta = e.code === 'BracketRight' ? 1 : -1;
-                CONFIG.wind.level = Math.max(0, Math.min(9, CONFIG.wind.level + delta));
-                window.dispatchEvent(new CustomEvent('wind-change', { detail: CONFIG.wind.level }));
-            }
         };
         window.addEventListener('keydown', onKey);
         window.addEventListener('keyup', (e) => { this.keys[e.code] = false; });
