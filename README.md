@@ -12,7 +12,7 @@
 模擬真實 5 吋 FPV 四軸飛行器的飛行物理，採用 Betaflight 風格的 Rates 系統，
 在瀏覽器中練習從起飛懸停到 8 字飛行的完整技能。純前端、零安裝、即開即飛。
 
-[**在線試玩 Live Demo**](https://m72900024.github.io/-Flight-Simulator-third-person-view/)
+[**在線試玩 Live Demo**](https://m72900024.github.io/LOS-Flight-Simulator/)
 
 </div>
 
@@ -20,7 +20,7 @@
 
 ## 快速開始
 
-1. 開啟 [Live Demo](https://m72900024.github.io/-Flight-Simulator-third-person-view/)
+1. 開啟 [Live Demo](https://m72900024.github.io/LOS-Flight-Simulator/)
 2. 點擊 **「以鍵盤開始」**
 3. 選擇 **第 1 關**
 4. 按 `Space` 解鎖馬達（Arm）
@@ -315,8 +315,8 @@
 
 ```bash
 # 克隆專案
-git clone https://github.com/m72900024/-Flight-Simulator-third-person-view.git
-cd -Flight-Simulator-third-person-view
+git clone https://github.com/m72900024/LOS-Flight-Simulator.git
+cd LOS-Flight-Simulator
 
 # 啟動本地伺服器（ES Modules 需要 HTTP 伺服器）
 npx serve .
@@ -359,6 +359,6 @@ python3 -m http.server 8000
 
 <div align="center">
 
-**[在線試玩](https://m72900024.github.io/-Flight-Simulator-third-person-view/)** · **[回報問題](https://github.com/m72900024/-Flight-Simulator-third-person-view/issues)** · **[參與貢獻](#參與貢獻)**
+**[在線試玩](https://m72900024.github.io/LOS-Flight-Simulator/)** · **[回報問題](https://github.com/m72900024/LOS-Flight-Simulator/issues)** · **[參與貢獻](#參與貢獻)**
 
 </div>
