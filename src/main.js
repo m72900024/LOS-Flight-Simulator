@@ -5,6 +5,11 @@ import { LevelManager } from './LevelManager.js';
 import { CONFIG, FLIGHT_MODES } from './Config.js';
 import { touchInput } from './TouchInput.js';
 
+try {
+    const savedJT = localStorage.getItem('flightSimJoystickType');
+    if (savedJT === 'centering' || savedJT === 'rc') CONFIG.joystickType = savedJT;
+} catch (e) {}
+
 const input = new InputController();
 let physics, gameScene, levelManager, audioEngine;
 const clock = new THREE.Clock();
@@ -221,6 +226,16 @@ window.startGameApp = function () { showLevelSelect(); };
 
 window.startGamepad = function () {
     showLevelSelect();
+};
+
+window.updateJoystickType = function (type) {
+    if (type !== 'centering' && type !== 'rc') return;
+    CONFIG.joystickType = type;
+    try { localStorage.setItem('flightSimJoystickType', type); } catch (e) {}
+    // 同步給尚未進關卡的 input 預設值，已進關卡後再切只影響下次進場
+    const isCentering = type === 'centering';
+    input.state.t = isCentering ? 0.5 : 0;
+    input.state.flightMode = isCentering ? FLIGHT_MODES.ALT_HOLD : FLIGHT_MODES.ANGLE;
 };
 
 window.startHybrid = function () {
@@ -635,3 +650,17 @@ function animate() {
     }
 }
 animate();
+
+// 頁面載入後把 radio 按鈕同步到 CONFIG.joystickType（已從 localStorage 讀取）
+(function syncJoystickTypeRadio() {
+    const apply = () => {
+        const id = CONFIG.joystickType === 'rc' ? 'jt-rc' : 'jt-centering';
+        const el = document.getElementById(id);
+        if (el) el.checked = true;
+    };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', apply);
+    } else {
+        apply();
+    }
+})();

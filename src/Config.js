@@ -5,6 +5,8 @@ export const CONFIG = {
     angularDrag: 15, hardDeck: 0.05, maxHeight: 50,
     thrustPower: 24, thrustExpo: 0.3, rates: 1.2, superRate: 0.7,
     maxTiltAngle: 55, droneScale: 3.0,
+    // 'centering' = 遊戲手把（油門初值 0.5、預設 ALT_HOLD）；'rc' = 不置中飛手桿（油門 0、預設 ANGLE）
+    joystickType: 'centering',
     axes: { thrust: 1, yaw: 0, pitch: 2, roll: 5, arm: -1, mode: -1 },
     invert: { t: false, r: false, e: false, a: false },
     calibration: { roll: 0, pitch: 0, yaw: 0, thrust: 0 },

@@ -469,6 +469,20 @@
                     </div>
 
                     <div style="margin-top:10px;padding:8px;background:#111;border-radius:6px;">
+                        <div style="font-size:12px;color:#88aaff;margin-bottom:6px;">⚙️ 搖桿類型（決定油門初值與預設模式）</div>
+                        <label style="font-size:11px;color:#ccc;cursor:pointer;display:block;margin-bottom:3px;">
+                            <input type="radio" name="joystick-type" value="centering" id="jt-centering" checked
+                                   onchange="window.updateJoystickType('centering')" style="margin-right:5px;">
+                            🎮 置中型（遊戲手把） — 油門起始 50%、預設 ALT_HOLD
+                        </label>
+                        <label style="font-size:11px;color:#ccc;cursor:pointer;display:block;">
+                            <input type="radio" name="joystick-type" value="rc" id="jt-rc"
+                                   onchange="window.updateJoystickType('rc')" style="margin-right:5px;">
+                            🛩️ 不置中型（RC 飛手桿） — 油門起始 0%、預設 ANGLE
+                        </label>
+                    </div>
+
+                    <div style="margin-top:10px;padding:8px;background:#111;border-radius:6px;">
                         <label style="font-size:12px;color:#ccc;cursor:pointer;">
                             <input type="checkbox" id="hybrid-mode-check" style="margin-right:5px;">
                             混合模式（左手把 油門+偏航，←↑↓→ 俯仰+橫滾）
@@ -519,6 +533,6 @@
             if (tb) tb.style.display = 'none';
         }
     </script>
-    <script type="module" src="./src/main.js?v=20260502-clean"></script>
+    <script type="module" src="./src/main.js?v=20260502-jtype"></script>
 </body>
 </html>

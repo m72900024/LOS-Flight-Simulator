@@ -3,10 +3,12 @@ import { touchInput } from './TouchInput.js';
 
 export class InputController {
     constructor() {
+        // 預設值由 joystickType 決定：置中型搖桿 → ALT_HOLD + 油門 50%；RC 飛手桿 → ANGLE + 油門 0
+        const isCentering = CONFIG.joystickType === 'centering';
         this.state = {
-            t: 0, r: 0, p: 0, y: 0,
+            t: isCentering ? 0.5 : 0, r: 0, p: 0, y: 0,
             armed: false,
-            flightMode: FLIGHT_MODES.ANGLE
+            flightMode: isCentering ? FLIGHT_MODES.ALT_HOLD : FLIGHT_MODES.ANGLE
         };
         this.gamepadIndex = null;
         this.useKeyboard = false; // 鍵盤模式開關
@@ -183,7 +185,7 @@ export class InputController {
         const now_t = performance.now();
         const dt_t = this._lastGamepadTime ? (now_t - this._lastGamepadTime) / 1000 : 1/60;
         this._lastGamepadTime = now_t;
-        if (this.state.t === undefined) this.state.t = 0;
+        if (this.state.t === undefined) this.state.t = (CONFIG.joystickType === 'centering') ? 0.5 : 0;
 
         let rawThr = gp.axes[ax.thrust] || 0;
         // deadzone
