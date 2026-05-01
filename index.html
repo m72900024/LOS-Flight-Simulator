@@ -376,6 +376,28 @@
             <h2 style="color:#00ffcc;margin-top:0;margin-bottom:5px;">🚁 飛行前檢查</h2>
             <div id="status-msg" style="color:#ffaa00;font-size:12px;margin-bottom:10px;">請連接搖桿...</div>
 
+            <div style="background:#1a1a2a;padding:8px;border-radius:6px;margin-bottom:10px;border:1px solid #336;">
+                <div style="font-size:12px;color:#88aaff;margin-bottom:6px;">🎯 飛行難度（角速度 / 最大傾角 / 油門曲線）</div>
+                <label style="font-size:11px;color:#ccc;cursor:pointer;margin-right:10px;">
+                    <input type="radio" name="difficulty" value="beginner" id="diff-beginner" checked
+                           onchange="window.updateDifficulty('beginner')" style="margin-right:4px;">
+                    🌱 新手
+                </label>
+                <label style="font-size:11px;color:#ccc;cursor:pointer;margin-right:10px;">
+                    <input type="radio" name="difficulty" value="normal" id="diff-normal"
+                           onchange="window.updateDifficulty('normal')" style="margin-right:4px;">
+                    ⚡ 一般
+                </label>
+                <label style="font-size:11px;color:#ccc;cursor:pointer;">
+                    <input type="radio" name="difficulty" value="expert" id="diff-expert"
+                           onchange="window.updateDifficulty('expert')" style="margin-right:4px;">
+                    🔥 專家
+                </label>
+                <div style="font-size:10px;color:#666;margin-top:4px;">
+                    新手 = 最低靈敏度（rates 0.3 / 傾角 20° / 油門曲線溫和）
+                </div>
+            </div>
+
             <div class="monitor-box">
                 <div style="font-size:11px;color:#888;margin-bottom:5px;text-align:left;display:flex;justify-content:space-between;">
                     <span>🔍 訊號監控</span>
@@ -533,6 +555,6 @@
             if (tb) tb.style.display = 'none';
         }
     </script>
-    <script type="module" src="./src/main.js?v=20260502-greenred"></script>
+    <script type="module" src="./src/main.js?v=20260502-difficulty"></script>
 </body>
 </html>

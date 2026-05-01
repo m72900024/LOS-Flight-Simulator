@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.5（2026-05-02）
+- 新增飛行難度選項（新手 / 一般 / 專家），預設 **新手** 最低靈敏度
+- 各難度預設值：
+  - 🌱 新手：rates 0.30 / superRate 0.0 / 最大傾角 20° / thrustExpo 0.6
+  - ⚡ 一般：rates 0.80 / superRate 0.3 / 最大傾角 40° / thrustExpo 0.4
+  - 🔥 專家：rates 1.20 / superRate 0.7 / 最大傾角 55° / thrustExpo 0.3（原本預設值）
+- 設定畫面頂部新增 radio 即時切換，存於 localStorage
+- cache buster 更新為 `v=20260502-difficulty`
+
 ## v2.4.5（2026-05-02）
 - 翻轉前後配色為「前綠 / 後紅」
 - 影響：臂尖+中段 LED 與 halo、馬達鐘罩、螺旋槳模糊碟全部一起切色

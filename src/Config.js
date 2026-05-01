@@ -1,10 +1,19 @@
 export const FLIGHT_MODES = { ACRO: 0, ANGLE: 1, HORIZON: 2, ALT_HOLD: 3 };
 
+// 難度預設值：影響角速度、最大傾角、油門曲線
+export const DIFFICULTY_PRESETS = {
+    beginner: { rates: 0.30, superRate: 0.0, maxTiltAngle: 20, thrustExpo: 0.6 },
+    normal:   { rates: 0.80, superRate: 0.3, maxTiltAngle: 40, thrustExpo: 0.4 },
+    expert:   { rates: 1.20, superRate: 0.7, maxTiltAngle: 55, thrustExpo: 0.3 },
+};
+
 export const CONFIG = {
     gravity: 9.81, mass: 0.6, maxThrust: 28.0, dragCoeff: 0.015,
     angularDrag: 15, hardDeck: 0.05, maxHeight: 50,
-    thrustPower: 24, thrustExpo: 0.3, rates: 1.2, superRate: 0.7,
-    maxTiltAngle: 55, droneScale: 3.0,
+    thrustPower: 24, thrustExpo: 0.6, rates: 0.30, superRate: 0.0,
+    maxTiltAngle: 20, droneScale: 3.0,
+    // 難度預設：'beginner' | 'normal' | 'expert'，新手最溫和
+    difficulty: 'beginner',
     // 'centering' = 遊戲手把（油門初值 0.5、預設 ALT_HOLD）；'rc' = 不置中飛手桿（油門 0、預設 ANGLE）
     joystickType: 'centering',
     axes: { thrust: 1, yaw: 0, pitch: 2, roll: 5, arm: -1, mode: -1 },

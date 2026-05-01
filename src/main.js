@@ -2,12 +2,20 @@ import { InputController } from './Input.js';
 import { PhysicsEngine } from './Physics.js';
 import { GameScene } from './Scene.js';
 import { LevelManager } from './LevelManager.js';
-import { CONFIG, FLIGHT_MODES } from './Config.js';
+import { CONFIG, FLIGHT_MODES, DIFFICULTY_PRESETS } from './Config.js';
 import { touchInput } from './TouchInput.js';
+
+function applyDifficulty(d) {
+    const p = DIFFICULTY_PRESETS[d] || DIFFICULTY_PRESETS.beginner;
+    Object.assign(CONFIG, p);
+    CONFIG.difficulty = d;
+}
 
 try {
     const savedJT = localStorage.getItem('flightSimJoystickType');
     if (savedJT === 'centering' || savedJT === 'rc') CONFIG.joystickType = savedJT;
+    const savedDiff = localStorage.getItem('flightSimDifficulty');
+    if (DIFFICULTY_PRESETS[savedDiff]) applyDifficulty(savedDiff);
 } catch (e) {}
 
 const input = new InputController();
@@ -226,6 +234,12 @@ window.startGameApp = function () { showLevelSelect(); };
 
 window.startGamepad = function () {
     showLevelSelect();
+};
+
+window.updateDifficulty = function (d) {
+    if (!DIFFICULTY_PRESETS[d]) return;
+    applyDifficulty(d);
+    try { localStorage.setItem('flightSimDifficulty', d); } catch (e) {}
 };
 
 window.updateJoystickType = function (type) {
@@ -651,12 +665,15 @@ function animate() {
 }
 animate();
 
-// 頁面載入後把 radio 按鈕同步到 CONFIG.joystickType（已從 localStorage 讀取）
-(function syncJoystickTypeRadio() {
+// 頁面載入後把 radio 按鈕同步到 CONFIG（已從 localStorage 讀取）
+(function syncRadios() {
     const apply = () => {
-        const id = CONFIG.joystickType === 'rc' ? 'jt-rc' : 'jt-centering';
-        const el = document.getElementById(id);
-        if (el) el.checked = true;
+        const jtId = CONFIG.joystickType === 'rc' ? 'jt-rc' : 'jt-centering';
+        const jtEl = document.getElementById(jtId);
+        if (jtEl) jtEl.checked = true;
+
+        const diffEl = document.getElementById('diff-' + CONFIG.difficulty);
+        if (diffEl) diffEl.checked = true;
     };
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', apply);
