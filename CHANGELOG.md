@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.3.1（2026-05-01）
+- 清空 v2.4 借鑒功能實驗（雙圓考場 / 風力 / H 點亮燈 / 雷達），授權狀態未確認前不採用
+- cache buster 強制更新為 `v=20260502-clean`，確保使用者瀏覽器讀新檔
+- 清掉 v2.4 revert 後 main.js 多餘的空行
+
 ## v2.3（2026-04-06）
 - 修復記憶體洩漏：切換關卡時正確 dispose 舊的 geometry/material/texture，防止 GPU 記憶體累積
 - 修復 AudioContext 自動播放政策：新增 ctx.resume()，Chrome/Safari 馬達音效正常播放

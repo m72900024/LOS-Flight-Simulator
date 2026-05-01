@@ -627,7 +627,6 @@ function animate() {
         const dirIdx = Math.round(yawDeg / 45) % 8;
         domCache.statHeading.innerText = `方向: ${dirs[dirIdx]}`;
 
-
         gameScene.render();
       } catch(e) {
         if (domCache.levelTitle) domCache.levelTitle.innerText = 'ERROR: ' + e.message;
