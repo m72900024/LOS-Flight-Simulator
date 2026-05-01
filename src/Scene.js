@@ -26,6 +26,8 @@ export class GameScene {
         this.clouds = [];
         this.windSock = null;
         this._navLights = [];
+        this._hMarkers = [];        // H 字 mesh（用於 1m 內亮綠偵測）
+        this._examFlagSet = false;  // 考場標線已建立旗標
 
         this._createSkyDome();
         this._initLights();
@@ -167,10 +169,56 @@ export class GameScene {
 
         this._createLandingPad();
         this._createRunwayLines();
+        this._createExamCircles();
         this._createTrees();
         this._createBuildings();
         this._createFence();
         this._createWindSock();
+    }
+
+    _createExamCircles() {
+        // 對標台灣 CAA AC107-005A 多旋翼基本級術科考場：
+        // 雙圓設計（左/右各一），用於四面定點懸停與矩形航線練習
+        // 圓心：(±6, 0)；內 4m / 中 6m（虛線）/ 外 8m
+        const NEON = 0xc0ff60;
+        const DASH = 0x66bbff;
+
+        const drawCircle = (cx, cz, radius, color, dashed = false) => {
+            const segs = 96;
+            const pts = [];
+            for (let i = 0; i <= segs; i++) {
+                const a = (i / segs) * Math.PI * 2;
+                pts.push(new THREE.Vector3(cx + Math.cos(a) * radius, 0.025, cz + Math.sin(a) * radius));
+            }
+            const geo = new THREE.BufferGeometry().setFromPoints(pts);
+            const mat = dashed
+                ? new THREE.LineDashedMaterial({ color, dashSize: 0.4, gapSize: 0.25, transparent: true, opacity: 0.7 })
+                : new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.85 });
+            const line = new THREE.Line(geo, mat);
+            if (dashed) line.computeLineDistances();
+            this.scene.add(line);
+        };
+
+        [-6, 6].forEach(cx => {
+            drawCircle(cx, 0, 4, NEON);
+            drawCircle(cx, 0, 6, DASH, true);
+            drawCircle(cx, 0, 8, NEON);
+        });
+
+        // 中央測驗區方框（兩圓共用測驗區邊界，4m × 18m，沿 X 軸貫穿雙圓）
+        const boxPts = [
+            new THREE.Vector3(-14, 0.022, -2),
+            new THREE.Vector3( 14, 0.022, -2),
+            new THREE.Vector3( 14, 0.022,  2),
+            new THREE.Vector3(-14, 0.022,  2),
+            new THREE.Vector3(-14, 0.022, -2),
+        ];
+        const boxGeo = new THREE.BufferGeometry().setFromPoints(boxPts);
+        const boxLine = new THREE.Line(boxGeo,
+            new THREE.LineBasicMaterial({ color: 0xff8c00, transparent: true, opacity: 0.55 }));
+        this.scene.add(boxLine);
+
+        this._examFlagSet = true;
     }
 
     _createRunwayLines() {
@@ -208,16 +256,17 @@ export class GameScene {
         ringInner.rotation.x = -Math.PI / 2; ringInner.position.y = 0.03;
         this.scene.add(ringInner);
 
-        // H 字
-        const hMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        // H 字（每段獨立 material，用於 1m 內動態亮綠）
         [
             { w: 0.14, h: 1.30, x: -0.36, z: 0 },
             { w: 0.14, h: 1.30, x:  0.36, z: 0 },
             { w: 0.82, h: 0.14, x:     0, z: 0 }
         ].forEach(b => {
-            const m = new THREE.Mesh(new THREE.PlaneGeometry(b.w, b.h), hMat);
+            const mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const m = new THREE.Mesh(new THREE.PlaneGeometry(b.w, b.h), mat);
             m.rotation.x = -Math.PI / 2; m.position.set(b.x, 0.04, b.z);
             this.scene.add(m);
+            this._hMarkers.push(m);
         });
 
         // 角落琥珀燈
@@ -573,10 +622,20 @@ export class GameScene {
             if (cloud.position.x > 150) cloud.position.x = -150;
         }
 
-        // 風向袋搖擺
+        // 風向袋搖擺（強度跟全域風力等級連動）
         if (this.windSock) {
-            this.windSock.rotation.z = Math.sin(Date.now() * 0.0014) * 0.22;
-            this.windSock.rotation.x = Math.sin(Date.now() * 0.0009) * 0.10;
+            const windLvl = (CONFIG.wind && CONFIG.wind.level) || 0;
+            const baseSwing = 0.18 + windLvl * 0.10;
+            this.windSock.rotation.z = Math.sin(Date.now() * 0.0014) * baseSwing;
+            this.windSock.rotation.x = Math.sin(Date.now() * 0.0009) * (0.08 + windLvl * 0.05);
+        }
+
+        // H 點 1m 智慧偵測：機體在 H 上方 1m 範圍 + 高度 < 1.5m 時亮螢光綠
+        if (this._hMarkers.length > 0) {
+            const hDist = Math.sqrt(pos.x * pos.x + pos.z * pos.z);
+            const isClose = hDist < 1.0 && pos.y < 1.5 && pos.y >= CONFIG.hardDeck;
+            const targetColor = isClose ? 0x00ff66 : 0xffffff;
+            this._hMarkers.forEach(m => m.material.color.setHex(targetColor));
         }
 
         // LOS 第三人稱鏡頭
