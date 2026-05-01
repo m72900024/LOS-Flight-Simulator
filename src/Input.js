@@ -181,19 +181,28 @@ export class InputController {
             return invert ? -val : val;
         };
 
-        // 油門（速率模式：置中型搖桿，置中不動，往上加速，往下減速）
-        const now_t = performance.now();
-        const dt_t = this._lastGamepadTime ? (now_t - this._lastGamepadTime) / 1000 : 1/60;
-        this._lastGamepadTime = now_t;
-        if (this.state.t === undefined) this.state.t = (CONFIG.joystickType === 'centering') ? 0.5 : 0;
-
+        // 油門：依搖桿類型 + 飛行模式選擇 position mode（DJI 風格）或 rate mode（FPV 風格）
         let rawThr = gp.axes[ax.thrust] || 0;
-        // deadzone
-        if (Math.abs(rawThr) < 0.12) rawThr = 0;
+        if (Math.abs(rawThr) < 0.12) rawThr = 0; // 中心死區
         if (inv.t) rawThr = -rawThr;
-        // 往上推(負值)=加速，往下拉(正值)=減速，置中=保持
-        const thrRate = 1.5; // 每秒增減速度（可調）
-        this.state.t = Math.max(0, Math.min(1, this.state.t - rawThr * thrRate * dt_t));
+
+        const isCentering = CONFIG.joystickType === 'centering';
+        const isAltHold = this.state.flightMode === FLIGHT_MODES.ALT_HOLD;
+
+        if (!isCentering || isAltHold) {
+            // position mode：桿位直接 = 油門
+            //   - 不置中 RC 桿：桿底=0%、桿頂=100%（真實 RC 行為）
+            //   - 置中桿 + ALT_HOLD：鬆桿回中 = 50% = PID 懸停（DJI 風格）
+            this.state.t = Math.max(0, Math.min(1, 0.5 - rawThr * 0.5));
+        } else {
+            // rate mode：置中桿 + ACRO/ANGLE/HORIZON — 推上加、推下減、鬆桿油門保持
+            const now_t = performance.now();
+            const dt_t = this._lastGamepadTime ? (now_t - this._lastGamepadTime) / 1000 : 1/60;
+            this._lastGamepadTime = now_t;
+            if (this.state.t === undefined) this.state.t = 0.5;
+            const thrRate = 1.5;
+            this.state.t = Math.max(0, Math.min(1, this.state.t - rawThr * thrRate * dt_t));
+        }
 
         // 姿態
         this.state.r = readAxis(ax.roll, inv.a, cal.roll, 'roll');
