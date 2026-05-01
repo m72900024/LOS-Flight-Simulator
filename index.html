@@ -264,15 +264,15 @@
                        background:rgba(6,12,10,0.78);
                        border:1px solid #00ffcc55;border-radius:10px;
                        box-shadow:0 0 12px rgba(0,255,204,0.18);
-                       pointer-events:none;z-index:5;"></canvas>
+                       pointer-events:none;z-index:5;display:none;"></canvas>
         <div id="hud-top">
             <div style="text-align:left;">
                 <div id="stat-thr">THR: 0%</div>
                 <div id="stat-mode" style="font-size:12px;color:#88ff88;">MODE: 自穩</div>
                 <div id="stat-input" style="font-size:11px;color:#aaa;">⌨️ 鍵盤</div>
                 <div id="stat-armed" style="font-size:12px;color:#ff3333;">DISARMED</div>
-                <div id="stat-pos" style="font-size:11px;color:#aaa;margin-top:2px;">X: 0.0 &nbsp; Z: 0.0</div>
-                <div id="stat-wind" style="font-size:12px;color:#aaa;">🌬 風: 0</div>
+                <div id="stat-pos" style="font-size:11px;color:#aaa;margin-top:2px;display:none;">X: 0.0 &nbsp; Z: 0.0</div>
+                <div id="stat-wind" style="font-size:12px;color:#aaa;display:none;">🌬 風: 0</div>
             </div>
             <div id="center-info">
                 <div id="level-title">LEVEL 1</div>
@@ -498,7 +498,7 @@
                     <b>W/S</b> 油門升降 &nbsp; <b>A/D</b> 轉向 &nbsp;
                     <b>↑↓</b> 俯仰 &nbsp; <b>←→</b> 橫滾<br>
                     <b>Space</b> 解鎖 &nbsp; <b>1/2/3</b> 切模式 &nbsp;
-                    <b>[/]</b> 風力 0~9 &nbsp; <b>R</b> 重置 &nbsp; <b>ESC</b> 返回
+                    <b>R</b> 重置 &nbsp; <b>ESC</b> 返回
                 </div>
                 <button class="start-btn" style="margin-top:10px;padding:8px 30px;font-size:14px;background:linear-gradient(to right,#44aa44,#88ff88);"
                     onclick="window.startKeyboard()">⌨️ 鍵盤模式</button>
@@ -529,6 +529,6 @@
             if (tb) tb.style.display = 'none';
         }
     </script>
-    <script type="module" src="./src/main.js?v=20260501-v24"></script>
+    <script type="module" src="./src/main.js?v=20260501-gated"></script>
 </body>
 </html>

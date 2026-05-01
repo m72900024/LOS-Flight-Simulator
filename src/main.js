@@ -693,18 +693,18 @@ function animate() {
         const dirIdx = Math.round(yawDeg / 45) % 8;
         domCache.statHeading.innerText = `方向: ${dirs[dirIdx]}`;
 
-        // 座標 + 風力
-        if (domCache.statPos) {
-            domCache.statPos.innerText = `X: ${physics.pos.x.toFixed(1)}   Z: ${physics.pos.z.toFixed(1)}`;
+        // 座標 + 風力 + 雷達（v2.4，目前停用）
+        if (CONFIG._v24Features) {
+            if (domCache.statPos) {
+                domCache.statPos.innerText = `X: ${physics.pos.x.toFixed(1)}   Z: ${physics.pos.z.toFixed(1)}`;
+            }
+            if (domCache.statWind) {
+                const wl = (CONFIG.wind && CONFIG.wind.level) || 0;
+                domCache.statWind.innerText = `🌬 風: ${wl}`;
+                domCache.statWind.style.color = wl === 0 ? '#888' : (wl < 4 ? '#ffcc00' : '#ff5500');
+            }
+            drawRadar(physics.pos, yawDeg);
         }
-        if (domCache.statWind) {
-            const wl = (CONFIG.wind && CONFIG.wind.level) || 0;
-            domCache.statWind.innerText = `🌬 風: ${wl}`;
-            domCache.statWind.style.color = wl === 0 ? '#888' : (wl < 4 ? '#ffcc00' : '#ff5500');
-        }
-
-        // 右下雷達（Top-down 場地視圖）
-        drawRadar(physics.pos, yawDeg);
 
         gameScene.render();
       } catch(e) {

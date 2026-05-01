@@ -169,7 +169,7 @@ export class GameScene {
 
         this._createLandingPad();
         this._createRunwayLines();
-        this._createExamCircles();
+        if (CONFIG._v24Features) this._createExamCircles();
         this._createTrees();
         this._createBuildings();
         this._createFence();
@@ -624,14 +624,14 @@ export class GameScene {
 
         // 風向袋搖擺（強度跟全域風力等級連動）
         if (this.windSock) {
-            const windLvl = (CONFIG.wind && CONFIG.wind.level) || 0;
+            const windLvl = CONFIG._v24Features ? ((CONFIG.wind && CONFIG.wind.level) || 0) : 0;
             const baseSwing = 0.18 + windLvl * 0.10;
             this.windSock.rotation.z = Math.sin(Date.now() * 0.0014) * baseSwing;
             this.windSock.rotation.x = Math.sin(Date.now() * 0.0009) * (0.08 + windLvl * 0.05);
         }
 
         // H 點 1m 智慧偵測：機體在 H 上方 1m 範圍 + 高度 < 1.5m 時亮螢光綠
-        if (this._hMarkers.length > 0) {
+        if (CONFIG._v24Features && this._hMarkers.length > 0) {
             const hDist = Math.sqrt(pos.x * pos.x + pos.z * pos.z);
             const isClose = hDist < 1.0 && pos.y < 1.5 && pos.y >= CONFIG.hardDeck;
             const targetColor = isClose ? 0x00ff66 : 0xffffff;

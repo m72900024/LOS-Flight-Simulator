@@ -23,6 +23,7 @@ export class PhysicsEngine {
     }
 
     _applyWind(dt, force) {
+        if (!CONFIG._v24Features) return;
         const level = (CONFIG.wind && CONFIG.wind.level) || 0;
         if (level === 0) {
             this._windCurrent.set(0, 0, 0);
