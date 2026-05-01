@@ -354,8 +354,9 @@ export class GameScene {
         // === 材質 ===
         const cfMat = new THREE.MeshStandardMaterial({ color: 0x0d0d0d, roughness: 0.28, metalness: 0.68 });
         const motorBellMat = new THREE.MeshStandardMaterial({ color: 0x1c1c1c, roughness: 0.12, metalness: 0.96 });
-        const redMat = new THREE.MeshStandardMaterial({ color: 0xcc2200, roughness: 0.3, metalness: 0.55 });
-        const blueMat = new THREE.MeshStandardMaterial({ color: 0x0055cc, roughness: 0.3, metalness: 0.55 });
+        // 機殼/馬達鐘罩配色：前綠後紅（DJI 風）
+        const frontBellMat = new THREE.MeshStandardMaterial({ color: 0x118833, roughness: 0.3, metalness: 0.55 });
+        const rearBellMat = new THREE.MeshStandardMaterial({ color: 0xcc2200, roughness: 0.3, metalness: 0.55 });
         const fcMat = new THREE.MeshStandardMaterial({ color: 0x0a2a0a, roughness: 0.8, metalness: 0.2 });
         const goldMat = new THREE.MeshStandardMaterial({ color: 0xc89010, roughness: 0.18, metalness: 0.96 });
 
@@ -391,10 +392,10 @@ export class GameScene {
 
         // === 四臂 + 馬達 + 螺旋槳 ===
         const armDefs = [
-            { x:  0.19, z: -0.19, a: -Math.PI/4, isRed: true  }, // FR
-            { x: -0.19, z: -0.19, a:  Math.PI/4, isRed: true  }, // FL
-            { x:  0.19, z:  0.19, a:  Math.PI/4, isRed: false }, // RR
-            { x: -0.19, z:  0.19, a: -Math.PI/4, isRed: false }, // RL
+            { x:  0.19, z: -0.19, a: -Math.PI/4, isFront: true  }, // FR
+            { x: -0.19, z: -0.19, a:  Math.PI/4, isFront: true  }, // FL
+            { x:  0.19, z:  0.19, a:  Math.PI/4, isFront: false }, // RR
+            { x: -0.19, z:  0.19, a: -Math.PI/4, isFront: false }, // RL
         ];
 
         armDefs.forEach((ap, i) => {
@@ -415,17 +416,17 @@ export class GameScene {
             this.droneGroup.add(stator);
 
             // 馬達鐘罩（上半，紅/藍色）
-            const bell = new THREE.Mesh(new THREE.CylinderGeometry(0.021, 0.017, 0.018, 12), ap.isRed ? redMat : blueMat);
+            const bell = new THREE.Mesh(new THREE.CylinderGeometry(0.021, 0.017, 0.018, 12), ap.isFront ? frontBellMat : rearBellMat);
             bell.position.set(ap.x, 0.018, ap.z);
             this.droneGroup.add(bell);
 
-            // 臂尖航行燈（紅前/藍後）— 加大球體 + 環繞光暈
-            const navColor = ap.isRed ? 0xff3333 : 0x3366ff;
+            // 臂尖航行燈（前綠 / 後紅）— 加大球體 + 環繞光暈
+            const navColor = ap.isFront ? 0x33ff66 : 0xff3333;
             const navLightMat = new THREE.MeshBasicMaterial({ color: navColor });
             const navLight = new THREE.Mesh(new THREE.SphereGeometry(0.015, 8, 8), navLightMat);
             navLight.position.set(ap.x * 0.82, 0.014, ap.z * 0.82);
             this.droneGroup.add(navLight);
-            this._navLights.push({ mat: navLightMat, isRed: ap.isRed });
+            this._navLights.push({ mat: navLightMat, isFront: ap.isFront });
 
             // 臂尖光暈（加色混合，遠距可見的發光感）
             const haloMat = new THREE.MeshBasicMaterial({
@@ -440,7 +441,7 @@ export class GameScene {
             const midLight = new THREE.Mesh(new THREE.SphereGeometry(0.008, 6, 6), navLightMat.clone());
             midLight.position.set(ap.x * 0.45, 0.014, ap.z * 0.45);
             this.droneGroup.add(midLight);
-            this._navLights.push({ mat: midLight.material, isRed: ap.isRed });
+            this._navLights.push({ mat: midLight.material, isFront: ap.isFront });
             const midHalo = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), haloMat.clone());
             midHalo.position.copy(midLight.position);
             this.droneGroup.add(midHalo);
@@ -458,7 +459,7 @@ export class GameScene {
             const disc = new THREE.Mesh(
                 new THREE.CircleGeometry(0.112, 14),
                 new THREE.MeshBasicMaterial({
-                    color: ap.isRed ? 0xff4433 : 0x3344ff,
+                    color: ap.isFront ? 0x33ff77 : 0xff4433,
                     transparent: true, opacity: 0, side: THREE.DoubleSide
                 })
             );
@@ -614,8 +615,9 @@ export class GameScene {
         // 航行燈：前臂紅色快閃，後臂藍色常亮
         const navT = Date.now();
         this._navLights.forEach(nl => {
-            const on = nl.isRed ? ((navT & 768) > 256) : true;
-            nl.mat.color.setHex(on ? (nl.isRed ? 0xff1111 : 0x1133ff) : 0x050505);
+            // 前綠閃爍（搶眼），後紅常亮
+            const on = nl.isFront ? ((navT & 768) > 256) : true;
+            nl.mat.color.setHex(on ? (nl.isFront ? 0x33ff66 : 0xff3333) : 0x050505);
         });
 
         // 雲飄移
