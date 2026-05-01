@@ -419,12 +419,31 @@ export class GameScene {
             bell.position.set(ap.x, 0.018, ap.z);
             this.droneGroup.add(bell);
 
-            // 臂尖航行燈（紅前/藍後）
-            const navLightMat = new THREE.MeshBasicMaterial({ color: ap.isRed ? 0xff1111 : 0x1133ff });
-            const navLight = new THREE.Mesh(new THREE.SphereGeometry(0.006, 5, 5), navLightMat);
+            // 臂尖航行燈（紅前/藍後）— 加大球體 + 環繞光暈
+            const navColor = ap.isRed ? 0xff3333 : 0x3366ff;
+            const navLightMat = new THREE.MeshBasicMaterial({ color: navColor });
+            const navLight = new THREE.Mesh(new THREE.SphereGeometry(0.015, 8, 8), navLightMat);
             navLight.position.set(ap.x * 0.82, 0.014, ap.z * 0.82);
             this.droneGroup.add(navLight);
             this._navLights.push({ mat: navLightMat, isRed: ap.isRed });
+
+            // 臂尖光暈（加色混合，遠距可見的發光感）
+            const haloMat = new THREE.MeshBasicMaterial({
+                color: navColor, transparent: true, opacity: 0.5,
+                blending: THREE.AdditiveBlending, depthWrite: false
+            });
+            const halo = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 10), haloMat);
+            halo.position.copy(navLight.position);
+            this.droneGroup.add(halo);
+
+            // 臂中段第二顆 LED + halo（雙點亮提升前後辨識）
+            const midLight = new THREE.Mesh(new THREE.SphereGeometry(0.008, 6, 6), navLightMat.clone());
+            midLight.position.set(ap.x * 0.45, 0.014, ap.z * 0.45);
+            this.droneGroup.add(midLight);
+            this._navLights.push({ mat: midLight.material, isRed: ap.isRed });
+            const midHalo = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), haloMat.clone());
+            midHalo.position.copy(midLight.position);
+            this.droneGroup.add(midHalo);
 
             // === 螺旋槳組 ===
             const pg = new THREE.Group();
@@ -518,13 +537,41 @@ export class GameScene {
             this.droneGroup.add(skid);
         });
 
-        // === 後方狀態 LED ===
+        // === 後方狀態 LED ===（加大 + halo）
         this.ledMesh = new THREE.Mesh(
-            new THREE.SphereGeometry(0.013, 6, 6),
+            new THREE.SphereGeometry(0.020, 8, 8),
             new THREE.MeshBasicMaterial({ color: 0x00ff00 })
         );
         this.ledMesh.position.set(0, 0.022, 0.112);
         this.droneGroup.add(this.ledMesh);
+
+        const rearHalo = new THREE.Mesh(
+            new THREE.SphereGeometry(0.050, 10, 10),
+            new THREE.MeshBasicMaterial({
+                color: 0x00ff00, transparent: true, opacity: 0.45,
+                blending: THREE.AdditiveBlending, depthWrite: false
+            })
+        );
+        rearHalo.position.copy(this.ledMesh.position);
+        this.droneGroup.add(rearHalo);
+        this._rearHalo = rearHalo;
+
+        // === 機腹下投光（白色，幫助 LOS 飛遠時鎖位） ===
+        const bellyMat = new THREE.MeshBasicMaterial({ color: 0xffffee });
+        const belly = new THREE.Mesh(new THREE.SphereGeometry(0.025, 10, 10), bellyMat);
+        belly.position.set(0, -0.025, 0);
+        this.droneGroup.add(belly);
+        const bellyHalo = new THREE.Mesh(
+            new THREE.SphereGeometry(0.080, 12, 12),
+            new THREE.MeshBasicMaterial({
+                color: 0xffffee, transparent: true, opacity: 0.55,
+                blending: THREE.AdditiveBlending, depthWrite: false
+            })
+        );
+        bellyHalo.position.copy(belly.position);
+        this.droneGroup.add(bellyHalo);
+        this._bellyLight = belly;
+        this._bellyHalo = bellyHalo;
 
         const s = CONFIG.droneScale;
         this.droneGroup.scale.set(s, s, s);
@@ -550,13 +597,17 @@ export class GameScene {
             }
         }
 
-        // 後方 LED 閃爍：armed = 綠色閃，disarmed = 紅色慢閃
+        // 後方 LED 閃爍：armed = 綠色閃，disarmed = 紅色慢閃（halo 跟著切色）
         if (this.ledMesh) {
             const t = Date.now();
+            const armedOn = (t & 512) > 0;
+            const disarmedOn = (Math.floor(t / 600) % 2 === 0);
             if (armed) {
-                this.ledMesh.material.color.setHex((t & 512) ? 0x00ff00 : 0x003300);
+                this.ledMesh.material.color.setHex(armedOn ? 0x00ff00 : 0x003300);
+                if (this._rearHalo) this._rearHalo.material.color.setHex(0x00ff00);
             } else {
-                this.ledMesh.material.color.setHex((Math.floor(t / 600) % 2 === 0) ? 0xff0000 : 0x330000);
+                this.ledMesh.material.color.setHex(disarmedOn ? 0xff0000 : 0x330000);
+                if (this._rearHalo) this._rearHalo.material.color.setHex(0xff0000);
             }
         }
 
