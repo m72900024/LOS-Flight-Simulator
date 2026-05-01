@@ -122,6 +122,11 @@ export class PhysicsEngine {
         }
 
         // --- 2. 姿態控制 ---
+        // 未解鎖時搖桿不應作用：把姿態指令歸零，靠現有 lerp/damping 自然把 rotVel 收斂到 0
+        const aIn = input.armed
+            ? input
+            : { ...input, p: 0, r: 0, y: 0 };
+
         // Betaflight 風格的 rates：末端加速
         const baseRate = THREE.MathUtils.degToRad(600 * CONFIG.rates);
         const superRate = CONFIG.superRate || 0;
@@ -131,20 +136,20 @@ export class PhysicsEngine {
             return baseRate * absStick + baseRate * superRate * absStick * absStick * absStick;
         };
         const maxRate = baseRate; // 用於自穩模式
-        
+
         if (input.flightMode === FLIGHT_MODES.ACRO) {
             // [手動模式] Betaflight 風格角速度控制
             this._tmpVec1.set(
-                Math.sign(input.p) * calcRate(input.p),
-                Math.sign(input.y) * calcRate(input.y),
-                -Math.sign(input.r) * calcRate(input.r)
+                Math.sign(aIn.p) * calcRate(aIn.p),
+                Math.sign(aIn.y) * calcRate(aIn.y),
+                -Math.sign(aIn.r) * calcRate(aIn.r)
             );
             const angDrag = CONFIG.angularDrag || 5;
             this.rotVel.lerp(this._tmpVec1, angDrag * dt);
 
         } else if (input.flightMode === FLIGHT_MODES.ANGLE || input.flightMode === FLIGHT_MODES.ALT_HOLD) {
             // [自穩/定高模式] Spring-damper attitude control
-            this._applyAngleAttitude(input, maxRate, dt);
+            this._applyAngleAttitude(aIn, maxRate, dt);
 
         } else if (input.flightMode === FLIGHT_MODES.HORIZON) {
             // [半自穩模式] Betaflight-style HORIZON blend
@@ -152,14 +157,14 @@ export class PhysicsEngine {
 
             // 1. Acro target rates (with SuperRate) - reuse tmpVec1
             this._tmpVec1.set(
-                Math.sign(input.p) * calcRate(input.p),
-                Math.sign(input.y) * calcRate(input.y),
-                -Math.sign(input.r) * calcRate(input.r)
+                Math.sign(aIn.p) * calcRate(aIn.p),
+                Math.sign(aIn.y) * calcRate(aIn.y),
+                -Math.sign(aIn.r) * calcRate(aIn.r)
             );
 
             // 2. Angle correction targets stick-commanded angle (not zero!) - reuse tmpEuler
-            const targetPitch = input.p * maxTilt;
-            const targetRoll  = -input.r * maxTilt;
+            const targetPitch = aIn.p * maxTilt;
+            const targetRoll  = -aIn.r * maxTilt;
             this._tmpEuler.setFromQuaternion(this.quat, 'YXZ'); // fix: read current attitude
             const angleCorrectP = (targetPitch - this._tmpEuler.x) * 8.0;
             const angleCorrectR = (targetRoll  - this._tmpEuler.z) * 8.0;
@@ -170,8 +175,8 @@ export class PhysicsEngine {
                 if (deflection <= horizonTransition) return 1.0;
                 return 1.0 - (deflection - horizonTransition) / (1.0 - horizonTransition);
             };
-            const levelP = calcLevelStrength(Math.abs(input.p));
-            const levelR = calcLevelStrength(Math.abs(input.r));
+            const levelP = calcLevelStrength(Math.abs(aIn.p));
+            const levelR = calcLevelStrength(Math.abs(aIn.r));
 
             // 4. Blend per-axis
             this.rotVel.x = THREE.MathUtils.lerp(this._tmpVec1.x, angleCorrectP, levelP);

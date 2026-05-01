@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.4.2（2026-05-02）
+- 修正未解鎖（disarmed）時搖桿仍可控制姿態的 bug：
+  推 pitch/roll/yaw 時飛機在地上/空中還會旋轉。現改為未解鎖時姿態指令歸零，
+  既有角速度也透過原本的 lerp/damping 自然收斂為 0
+- cache buster 更新為 `v=20260502-armgate`
+
 ## v2.4.1（2026-05-02）
 - 修正置中桿 ALT_HOLD 油門邏輯：從 rate mode 改為 position mode（DJI 風格），鬆桿回中 = 50% = PID 懸停
 - 不置中 RC 飛手桿全模式統一 position mode（真實 RC 行為）
