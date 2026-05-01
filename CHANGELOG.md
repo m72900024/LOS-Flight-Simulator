@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.5.1（2026-05-02）
+- 修正 yaw 旋轉方向相反的 bug：左推搖桿 / 按 A 鍵應該左轉，但實際是右轉
+- 原因：Three.js 正 Y 軸旋轉是逆時針（=左轉），但 Physics 直接套 input.y 等於把符號反掉
+- 修法：在 Physics input gate 一次性 flip yaw 符號（`aIn.y = -input.y`），ACRO/ANGLE/HORIZON/ALT_HOLD 全部模式一起對齊
+- 設定畫面的 state.y 顯示不變（仍維持搖桿原始符號）
+- cache buster 更新為 `v=20260502-yawfix`
+
 ## v2.5（2026-05-02）
 - 新增飛行難度選項（新手 / 一般 / 專家），預設 **新手** 最低靈敏度
 - 各難度預設值：

@@ -123,8 +123,9 @@ export class PhysicsEngine {
 
         // --- 2. 姿態控制 ---
         // 未解鎖時搖桿不應作用：把姿態指令歸零，靠現有 lerp/damping 自然把 rotVel 收斂到 0
+        // yaw sign flip：Three.js 正 Y 旋轉 = 逆時針 = 左轉，符合「左推搖桿=左轉」直覺
         const aIn = input.armed
-            ? input
+            ? { ...input, y: -input.y }
             : { ...input, p: 0, r: 0, y: 0 };
 
         // Betaflight 風格的 rates：末端加速
