@@ -113,10 +113,11 @@ export class LevelManager {
         }
     }
 
-    _makeWpSphere(pos, color = 0x00ff88) {
+    _makeWpSphere(pos, color = 0xff3333) {
+        // 薄圓環取代球體，避免遮擋玩家視線；update loop 會持續 lookAt(drone) 永遠面向玩家
         const m = new THREE.Mesh(
-            new THREE.SphereGeometry(1.0, 16, 16),
-            new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.5, transparent: true, opacity: 0.7 })
+            new THREE.TorusGeometry(1.2, 0.08, 8, 28),
+            new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.7, transparent: true, opacity: 0.9 })
         );
         m.position.set(...pos);
         return m;
@@ -244,9 +245,9 @@ export class LevelManager {
     _highlightWp(idx) {
         this.wpMeshes.forEach((m, i) => {
             if (i === idx) {
-                m.material.color.setHex(0x00ff88);
-                m.material.emissive.setHex(0x00ff88);
-                m.material.opacity = 0.8;
+                m.material.color.setHex(0xff3333);
+                m.material.emissive.setHex(0xff3333);
+                m.material.opacity = 0.9;
             } else if (i < idx) {
                 m.material.opacity = 0.15;
             } else {
@@ -300,9 +301,9 @@ export class LevelManager {
     _highlightCp(idx) {
         this.wpMeshes.forEach((m, i) => {
             if (i === idx) {
-                m.material.color.setHex(0xffaa00);
-                m.material.emissive.setHex(0xffaa00);
-                m.material.opacity = 0.8;
+                m.material.color.setHex(0xff3333);
+                m.material.emissive.setHex(0xff3333);
+                m.material.opacity = 0.9;
             } else if (i < idx) {
                 m.material.opacity = 0.1;
             } else {
@@ -437,13 +438,14 @@ export class LevelManager {
         const pFill = document.getElementById('progress-fill');
         const L = this.currentLevel;
 
-        // Floating animation for active waypoint meshes
+        // Floating animation + lookAt(drone) for active waypoint meshes
         const bobY = Math.sin(Date.now() * 0.003) * 0.3;
         if ((L >= 3 && L <= 5) || L === 7) {
             const activeIdx = L === 7 ? this.cpIndex : this.wpIndex;
             this.wpMeshes.forEach((mesh, i) => {
                 if (i === activeIdx && i < this._wpBaseY.length) {
                     mesh.position.y = this._wpBaseY[i] + bobY;
+                    mesh.lookAt(dronePos); // 圓環面向飛機，玩家視角看得到正圓
                 }
             });
         }
