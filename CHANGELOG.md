@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.7.4（2026-05-02）
+- 修正內八/外八手勢觸發時 `ReferenceError: now_t is not defined` bug
+- 原因：`now_t` 只在 rate mode 油門分支內 declare，但置中桿 + ALT_HOLD 走 position mode，那邊不會 declare，gesture 邏輯讀不到
+- 修法：把 `now_t = performance.now()` 提到油門 if/else 之前，整個 updateGamepad 共用
+- cache buster 更新為 `v=20260502-nowfix`
+
 ## v2.7.3（2026-05-02）
 - 移除最底部多餘的「🎮 搖桿模式」按鈕（之前只是 shortcut 跳到關卡選擇，與搖桿配置區內的開始按鈕功能重複）
 - 連帶移除無用的 `window.startGameApp` 函式

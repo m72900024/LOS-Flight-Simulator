@@ -184,6 +184,9 @@ export class InputController {
             return invert ? -val : val;
         };
 
+        // 時間戳（解鎖手勢 hold 進度與 rate mode 油門積分都要用）
+        const now_t = performance.now();
+
         // 油門：依搖桿類型 + 飛行模式選擇 position mode（DJI 風格）或 rate mode（FPV 風格）
         let rawThr = gp.axes[ax.thrust] || 0;
         if (Math.abs(rawThr) < 0.12) rawThr = 0; // 中心死區
@@ -199,7 +202,6 @@ export class InputController {
             this.state.t = Math.max(0, Math.min(1, 0.5 - rawThr * 0.5));
         } else {
             // rate mode：置中桿 + ACRO/ANGLE/HORIZON — 推上加、推下減、鬆桿油門保持
-            const now_t = performance.now();
             const dt_t = this._lastGamepadTime ? (now_t - this._lastGamepadTime) / 1000 : 1/60;
             this._lastGamepadTime = now_t;
             if (this.state.t === undefined) this.state.t = 0.5;
