@@ -236,6 +236,97 @@ window.startGamepad = function () {
     showLevelSelect();
 };
 
+// === 場景配色控制（即時調整 + localStorage 持久化）===
+const GRASS_PRESETS = {
+    default: { outer: 0x2a8a2a, inner: 0x4cb04c, label: '預設' },
+    vivid:   { outer: 0x2ca02c, inner: 0x55c855, label: '鮮' },
+    deep:    { outer: 0x1f6e1f, inner: 0x3a8c3a, label: '深' },
+    golf:    { outer: 0x3da53d, inner: 0x5fc855, label: '高爾夫' },
+    forest:  { outer: 0x14541a, inner: 0x2a7a2e, label: '森林' },
+};
+const FOG_PRESETS = {
+    default:    { hex: 0x5a7a8c, label: '預設灰藍' },
+    clear:      { hex: 0x88a8c0, label: '晴朗' },
+    overcast:   { hex: 0x4a5664, label: '陰天' },
+    sunset:     { hex: 0x8a6a5e, label: '黃昏' },
+    midnight:   { hex: 0x1a2838, label: '深夜' },
+};
+
+function hexToCss(n) { return '#' + n.toString(16).padStart(6, '0'); }
+function cssToHex(s) { return parseInt(s.replace('#', ''), 16); }
+
+window.setGrassOuter = function (cssHex) {
+    const v = cssToHex(cssHex);
+    if (gameScene) gameScene.setGrassColors(v, null);
+    try { localStorage.setItem('flightSimGrassOuter', v.toString(16)); } catch (e) {}
+};
+window.setGrassInner = function (cssHex) {
+    const v = cssToHex(cssHex);
+    if (gameScene) gameScene.setGrassColors(null, v);
+    try { localStorage.setItem('flightSimGrassInner', v.toString(16)); } catch (e) {}
+};
+window.setFogColorPicker = function (cssHex) {
+    const v = cssToHex(cssHex);
+    if (gameScene) gameScene.setFogColor(v);
+    try { localStorage.setItem('flightSimFogColor', v.toString(16)); } catch (e) {}
+};
+window.setExposureSlider = function (v) {
+    const n = parseFloat(v);
+    if (gameScene) gameScene.setExposure(n);
+    document.getElementById('exposure-val').textContent = n.toFixed(2);
+    try { localStorage.setItem('flightSimExposure', String(n)); } catch (e) {}
+};
+window.grassPreset = function (name) {
+    const p = GRASS_PRESETS[name];
+    if (!p) return;
+    if (gameScene) gameScene.setGrassColors(p.outer, p.inner);
+    try {
+        localStorage.setItem('flightSimGrassOuter', p.outer.toString(16));
+        localStorage.setItem('flightSimGrassInner', p.inner.toString(16));
+    } catch (e) {}
+    const o = document.getElementById('grass-outer');
+    const i = document.getElementById('grass-inner');
+    if (o) o.value = hexToCss(p.outer);
+    if (i) i.value = hexToCss(p.inner);
+};
+window.fogPreset = function (name) {
+    const p = FOG_PRESETS[name];
+    if (!p) return;
+    if (gameScene) gameScene.setFogColor(p.hex);
+    try { localStorage.setItem('flightSimFogColor', p.hex.toString(16)); } catch (e) {}
+    const el = document.getElementById('fog-color');
+    if (el) el.value = hexToCss(p.hex);
+};
+window.toggleColorTuner = function () {
+    const body = document.getElementById('ct-body');
+    if (body) body.style.display = body.style.display === 'none' ? '' : 'none';
+};
+
+// 頁面載入時套用儲存的場景配色
+function applySavedSceneColors() {
+    if (!gameScene) return;
+    try {
+        const o = localStorage.getItem('flightSimGrassOuter');
+        const i = localStorage.getItem('flightSimGrassInner');
+        const f = localStorage.getItem('flightSimFogColor');
+        const e = localStorage.getItem('flightSimExposure');
+        if (o) gameScene.setGrassColors(parseInt(o, 16), null);
+        if (i) gameScene.setGrassColors(null, parseInt(i, 16));
+        if (f) gameScene.setFogColor(parseInt(f, 16));
+        if (e) gameScene.setExposure(parseFloat(e));
+        // 同步到 UI
+        const oEl = document.getElementById('grass-outer');
+        const iEl = document.getElementById('grass-inner');
+        const fEl = document.getElementById('fog-color');
+        const eEl = document.getElementById('exposure-slider');
+        const eVal = document.getElementById('exposure-val');
+        if (o && oEl) oEl.value = '#' + o.padStart(6, '0');
+        if (i && iEl) iEl.value = '#' + i.padStart(6, '0');
+        if (f && fEl) fEl.value = '#' + f.padStart(6, '0');
+        if (e && eEl) { eEl.value = e; if (eVal) eVal.textContent = parseFloat(e).toFixed(2); }
+    } catch (err) {}
+}
+
 window.updateDifficulty = function (d) {
     if (!DIFFICULTY_PRESETS[d]) return;
     applyDifficulty(d);
@@ -437,6 +528,7 @@ function startGame() {
         gameScene = new GameScene();
         levelManager = new LevelManager(gameScene);
         audioEngine = new AudioEngine();
+        applySavedSceneColors();
     }
     physics.reset();
     if (gameScene) gameScene.resetCamera();

@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.7（2026-05-02）— 場景配色面板
+- 左上角新增 🎨 場景配色 浮動面板（點開合），即時調 + 偏好存 localStorage
+- **草地**：外圈 / 內圈 各自 color picker + 5 個 preset（預設 / 鮮 / 深 / 高爾夫 / 森林）
+- **霧色**：color picker + 5 個 preset（預設灰藍 / 晴朗 / 陰天 / 黃昏 / 深夜）
+- **曝光對比**：滑桿 0.4 ~ 1.5（值越低 = 陰影越深、對比越強）
+- Scene 加 `setGrassColors / setFogColor / setExposure` 三個 setter
+- 載入時自動套用 localStorage 偏好
+- cache buster 更新為 `v=20260502-tuner`
+
 ## v2.6.1（2026-05-02）
 - 草地綠色再加飽和度（保持 v2.6 的深調，但讓綠更綠）：
   - 外圈：`0x2a6e2a`（偏暗黃綠）→ `0x2a8a2a`（更純的深草綠）

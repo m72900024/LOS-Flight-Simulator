@@ -36,6 +36,19 @@ export class GameScene {
         this.scene.add(this.levelGroup);
     }
 
+    setGrassColors(outerHex, innerHex) {
+        if (outerHex != null && this.outerGround) this.outerGround.material.color.setHex(outerHex);
+        if (innerHex != null && this.innerGround) this.innerGround.material.color.setHex(innerHex);
+    }
+
+    setFogColor(hex) {
+        if (this.scene.fog) this.scene.fog.color.setHex(hex);
+    }
+
+    setExposure(v) {
+        this.renderer.toneMappingExposure = v;
+    }
+
     _createSkyDome() {
         const skyGeo = new THREE.SphereGeometry(400, 32, 16);
         const skyMat = new THREE.ShaderMaterial({
@@ -148,6 +161,7 @@ export class GameScene {
         ground.rotation.x = -Math.PI / 2;
         ground.receiveShadow = true;
         this.scene.add(ground);
+        this.outerGround = ground;
 
         // 飛行區內圈（略淺）
         const innerGround = new THREE.Mesh(
@@ -158,6 +172,7 @@ export class GameScene {
         innerGround.position.y = 0.005;
         innerGround.receiveShadow = true;
         this.scene.add(innerGround);
+        this.innerGround = innerGround;
 
         // 網格
         const grid = new THREE.GridHelper(300, 30, 0x2a6a1a, 0x2a6a1a);

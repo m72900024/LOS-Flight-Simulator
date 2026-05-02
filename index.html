@@ -565,7 +565,62 @@
             if (tb) tb.style.display = 'none';
         }
     </script>
-    <script type="module" src="./src/main.js?v=20260502-greener"></script>
-    <div id="build-tag" style="position:fixed;bottom:4px;right:6px;font-size:10px;color:#456;font-family:monospace;pointer-events:none;z-index:9999;">build: 20260502-greener</div>
+    <script type="module" src="./src/main.js?v=20260502-tuner"></script>
+    <div id="build-tag" style="position:fixed;bottom:4px;right:6px;font-size:10px;color:#456;font-family:monospace;pointer-events:none;z-index:9999;">build: 20260502-tuner</div>
+
+    <div id="color-tuner" style="position:fixed;top:8px;left:8px;background:rgba(15,20,30,0.92);border:1px solid #345;border-radius:8px;padding:8px;font-size:11px;color:#cde;font-family:system-ui,sans-serif;z-index:9998;min-width:200px;backdrop-filter:blur(4px);">
+        <div style="cursor:pointer;font-weight:bold;color:#88ddff;display:flex;justify-content:space-between;align-items:center;" onclick="window.toggleColorTuner()">
+            <span>🎨 場景配色</span>
+            <span style="font-size:9px;color:#678;">點開合</span>
+        </div>
+        <div id="ct-body" style="margin-top:6px;display:none;">
+            <div style="margin-bottom:6px;">
+                <div style="color:#9c9;margin-bottom:3px;">草地</div>
+                <div style="display:flex;gap:6px;align-items:center;margin-bottom:3px;">
+                    <span style="width:30px;">外圈</span>
+                    <input type="color" id="grass-outer" value="#2a8a2a"
+                           oninput="window.setGrassOuter(this.value)"
+                           style="width:36px;height:22px;border:none;background:none;cursor:pointer;">
+                </div>
+                <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">
+                    <span style="width:30px;">內圈</span>
+                    <input type="color" id="grass-inner" value="#4cb04c"
+                           oninput="window.setGrassInner(this.value)"
+                           style="width:36px;height:22px;border:none;background:none;cursor:pointer;">
+                </div>
+                <div style="display:flex;gap:3px;flex-wrap:wrap;">
+                    <button onclick="window.grassPreset('default')" style="font-size:10px;padding:2px 6px;background:#345;border:none;color:#cde;border-radius:3px;cursor:pointer;">預設</button>
+                    <button onclick="window.grassPreset('vivid')" style="font-size:10px;padding:2px 6px;background:#345;border:none;color:#cde;border-radius:3px;cursor:pointer;">鮮</button>
+                    <button onclick="window.grassPreset('deep')" style="font-size:10px;padding:2px 6px;background:#345;border:none;color:#cde;border-radius:3px;cursor:pointer;">深</button>
+                    <button onclick="window.grassPreset('golf')" style="font-size:10px;padding:2px 6px;background:#345;border:none;color:#cde;border-radius:3px;cursor:pointer;">高爾夫</button>
+                    <button onclick="window.grassPreset('forest')" style="font-size:10px;padding:2px 6px;background:#345;border:none;color:#cde;border-radius:3px;cursor:pointer;">森林</button>
+                </div>
+            </div>
+            <div style="margin-bottom:6px;border-top:1px solid #234;padding-top:6px;">
+                <div style="color:#9cc;margin-bottom:3px;">霧色</div>
+                <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">
+                    <input type="color" id="fog-color" value="#5a7a8c"
+                           oninput="window.setFogColorPicker(this.value)"
+                           style="width:36px;height:22px;border:none;background:none;cursor:pointer;">
+                </div>
+                <div style="display:flex;gap:3px;flex-wrap:wrap;">
+                    <button onclick="window.fogPreset('default')" style="font-size:10px;padding:2px 6px;background:#345;border:none;color:#cde;border-radius:3px;cursor:pointer;">預設</button>
+                    <button onclick="window.fogPreset('clear')" style="font-size:10px;padding:2px 6px;background:#345;border:none;color:#cde;border-radius:3px;cursor:pointer;">晴朗</button>
+                    <button onclick="window.fogPreset('overcast')" style="font-size:10px;padding:2px 6px;background:#345;border:none;color:#cde;border-radius:3px;cursor:pointer;">陰天</button>
+                    <button onclick="window.fogPreset('sunset')" style="font-size:10px;padding:2px 6px;background:#345;border:none;color:#cde;border-radius:3px;cursor:pointer;">黃昏</button>
+                    <button onclick="window.fogPreset('midnight')" style="font-size:10px;padding:2px 6px;background:#345;border:none;color:#cde;border-radius:3px;cursor:pointer;">深夜</button>
+                </div>
+            </div>
+            <div style="border-top:1px solid #234;padding-top:6px;">
+                <div style="color:#cc9;margin-bottom:3px;display:flex;justify-content:space-between;">
+                    <span>曝光（對比）</span>
+                    <span id="exposure-val">0.88</span>
+                </div>
+                <input type="range" id="exposure-slider" min="0.4" max="1.5" step="0.02" value="0.88"
+                       oninput="window.setExposureSlider(this.value)"
+                       style="width:100%;">
+            </div>
+        </div>
+    </div>
 </body>
 </html>
