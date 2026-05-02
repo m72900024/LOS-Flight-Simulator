@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.7.6（2026-05-02）
+- 遊戲畫面右下角的 ARMED/DISARMED 狀態加上手勢 hold 進度顯示
+  （🤘 ARMING XX% / 🤙 DISARMING XX%），方便在遊戲中知道內八/外八手勢有沒有被偵測到
+- cache buster 更新為 `v=20260502-armhud`
+
 ## v2.7.5（2026-05-02）
 - 草地預設色改為「森林」（外 `0x14541a` / 內 `0x2a7a2e`）
 - 原本的中綠預設值保留為「中綠」preset

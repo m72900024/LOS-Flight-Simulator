@@ -787,8 +787,16 @@ function animate() {
         domCache.statAlt.innerText = `ALT: ${physics.pos.y.toFixed(1)}m`;
 
         domCache.statMode.innerText = 'MODE: '+(MODE_NAMES[inp.flightMode]||'?');
-        domCache.statArmed.innerText = inp.armed ? 'ARMED' : 'DISARMED';
-        domCache.statArmed.style.color = inp.armed ? '#00ff00' : '#ff3333';
+        if (inp.armProgress && inp.armProgress > 0) {
+            domCache.statArmed.innerText = `🤘 ARMING ${Math.round(inp.armProgress*100)}%`;
+            domCache.statArmed.style.color = '#ffaa00';
+        } else if (inp.armProgress && inp.armProgress < 0) {
+            domCache.statArmed.innerText = `🤙 DISARMING ${Math.round(-inp.armProgress*100)}%`;
+            domCache.statArmed.style.color = '#ffaa00';
+        } else {
+            domCache.statArmed.innerText = inp.armed ? 'ARMED' : 'DISARMED';
+            domCache.statArmed.style.color = inp.armed ? '#00ff00' : '#ff3333';
+        }
         domCache.statInput.innerText = input.useTouch ? '📱 觸控' : input.useHybrid ? '🎮+⌨️ 混合' : input.useKeyboard ? '⌨️ 鍵盤' : '🎮 搖桿';
 
         // 高度警告
