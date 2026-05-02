@@ -253,6 +253,14 @@ const FOG_PRESETS = {
     sunset:     { hex: 0x8a6a5e, label: '黃昏' },
     midnight:   { hex: 0x1a2838, label: '深夜' },
 };
+const SKY_PRESETS = {
+    default:  { top: 0x0a3a78, mid: 0x3a7ab0, horizon: 0xc78050, label: '預設' },
+    clear:    { top: 0x1565c0, mid: 0x64b5f6, horizon: 0xffcc88, label: '晴朗白天' },
+    overcast: { top: 0x4a5664, mid: 0x6a7884, horizon: 0x8a98a4, label: '陰天' },
+    sunset:   { top: 0x8a3a5a, mid: 0xc06a4a, horizon: 0xffaa55, label: '黃昏' },
+    night:    { top: 0x050a1a, mid: 0x0a1530, horizon: 0x1a2840, label: '夜晚' },
+    dawn:     { top: 0x2a4070, mid: 0x6a7aaa, horizon: 0xffcaa0, label: '清晨' },
+};
 
 function hexToCss(n) { return '#' + n.toString(16).padStart(6, '0'); }
 function cssToHex(s) { return parseInt(s.replace('#', ''), 16); }
@@ -291,6 +299,37 @@ window.grassPreset = function (name) {
     if (o) o.value = hexToCss(p.outer);
     if (i) i.value = hexToCss(p.inner);
 };
+window.setSkyTop = function (cssHex) {
+    const v = cssToHex(cssHex);
+    if (gameScene) gameScene.setSkyColors({ top: v });
+    try { localStorage.setItem('flightSimSkyTop', v.toString(16)); } catch (e) {}
+};
+window.setSkyMid = function (cssHex) {
+    const v = cssToHex(cssHex);
+    if (gameScene) gameScene.setSkyColors({ mid: v });
+    try { localStorage.setItem('flightSimSkyMid', v.toString(16)); } catch (e) {}
+};
+window.setSkyHorizon = function (cssHex) {
+    const v = cssToHex(cssHex);
+    if (gameScene) gameScene.setSkyColors({ horizon: v });
+    try { localStorage.setItem('flightSimSkyHorizon', v.toString(16)); } catch (e) {}
+};
+window.skyPreset = function (name) {
+    const p = SKY_PRESETS[name];
+    if (!p) return;
+    if (gameScene) gameScene.setSkyColors(p);
+    try {
+        localStorage.setItem('flightSimSkyTop', p.top.toString(16));
+        localStorage.setItem('flightSimSkyMid', p.mid.toString(16));
+        localStorage.setItem('flightSimSkyHorizon', p.horizon.toString(16));
+    } catch (e) {}
+    const t = document.getElementById('sky-top');
+    const m = document.getElementById('sky-mid');
+    const h = document.getElementById('sky-horizon');
+    if (t) t.value = hexToCss(p.top);
+    if (m) m.value = hexToCss(p.mid);
+    if (h) h.value = hexToCss(p.horizon);
+};
 window.fogPreset = function (name) {
     const p = FOG_PRESETS[name];
     if (!p) return;
@@ -311,21 +350,39 @@ function applySavedSceneColors() {
         const o = localStorage.getItem('flightSimGrassOuter');
         const i = localStorage.getItem('flightSimGrassInner');
         const f = localStorage.getItem('flightSimFogColor');
-        const e = localStorage.getItem('flightSimExposure');
+        const sT = localStorage.getItem('flightSimSkyTop');
+        const sM = localStorage.getItem('flightSimSkyMid');
+        const sH = localStorage.getItem('flightSimSkyHorizon');
+        // 曝光：預設改為最低 0.4（v2.7.2 之前是 0.88）
+        const e = localStorage.getItem('flightSimExposure') || '0.4';
         if (o) gameScene.setGrassColors(parseInt(o, 16), null);
         if (i) gameScene.setGrassColors(null, parseInt(i, 16));
         if (f) gameScene.setFogColor(parseInt(f, 16));
-        if (e) gameScene.setExposure(parseFloat(e));
+        if (sT || sM || sH) {
+            gameScene.setSkyColors({
+                top: sT ? parseInt(sT, 16) : null,
+                mid: sM ? parseInt(sM, 16) : null,
+                horizon: sH ? parseInt(sH, 16) : null,
+            });
+        }
+        gameScene.setExposure(parseFloat(e));
         // 同步到 UI
         const oEl = document.getElementById('grass-outer');
         const iEl = document.getElementById('grass-inner');
         const fEl = document.getElementById('fog-color');
+        const sTEl = document.getElementById('sky-top');
+        const sMEl = document.getElementById('sky-mid');
+        const sHEl = document.getElementById('sky-horizon');
         const eEl = document.getElementById('exposure-slider');
         const eVal = document.getElementById('exposure-val');
         if (o && oEl) oEl.value = '#' + o.padStart(6, '0');
         if (i && iEl) iEl.value = '#' + i.padStart(6, '0');
         if (f && fEl) fEl.value = '#' + f.padStart(6, '0');
-        if (e && eEl) { eEl.value = e; if (eVal) eVal.textContent = parseFloat(e).toFixed(2); }
+        if (sT && sTEl) sTEl.value = '#' + sT.padStart(6, '0');
+        if (sM && sMEl) sMEl.value = '#' + sM.padStart(6, '0');
+        if (sH && sHEl) sHEl.value = '#' + sH.padStart(6, '0');
+        if (eEl) eEl.value = e;
+        if (eVal) eVal.textContent = parseFloat(e).toFixed(2);
     } catch (err) {}
 }
 

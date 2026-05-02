@@ -565,8 +565,8 @@
             if (tb) tb.style.display = 'none';
         }
     </script>
-    <script type="module" src="./src/main.js?v=20260502-eager"></script>
-    <div id="build-tag" style="position:fixed;bottom:4px;right:6px;font-size:10px;color:#456;font-family:monospace;pointer-events:none;z-index:9999;">build: 20260502-eager</div>
+    <script type="module" src="./src/main.js?v=20260502-sky"></script>
+    <div id="build-tag" style="position:fixed;bottom:4px;right:6px;font-size:10px;color:#456;font-family:monospace;pointer-events:none;z-index:9999;">build: 20260502-sky</div>
 
     <div id="color-tuner" style="position:fixed;top:8px;left:8px;background:rgba(15,20,30,0.92);border:1px solid #345;border-radius:8px;padding:8px;font-size:11px;color:#cde;font-family:system-ui,sans-serif;z-index:9998;min-width:200px;backdrop-filter:blur(4px);">
         <div style="cursor:pointer;font-weight:bold;color:#88ddff;display:flex;justify-content:space-between;align-items:center;" onclick="window.toggleColorTuner()">
@@ -597,6 +597,23 @@
                 </div>
             </div>
             <div style="margin-bottom:6px;border-top:1px solid #234;padding-top:6px;">
+                <div style="color:#cce;margin-bottom:3px;">天空（高 / 中 / 地平線）</div>
+                <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">
+                    <input type="color" id="sky-top" value="#0a3a78" oninput="window.setSkyTop(this.value)" style="width:32px;height:22px;border:none;background:none;cursor:pointer;">
+                    <input type="color" id="sky-mid" value="#3a7ab0" oninput="window.setSkyMid(this.value)" style="width:32px;height:22px;border:none;background:none;cursor:pointer;">
+                    <input type="color" id="sky-horizon" value="#c78050" oninput="window.setSkyHorizon(this.value)" style="width:32px;height:22px;border:none;background:none;cursor:pointer;">
+                </div>
+                <div style="display:flex;gap:3px;flex-wrap:wrap;">
+                    <button onclick="window.skyPreset('default')" style="font-size:10px;padding:2px 6px;background:#345;border:none;color:#cde;border-radius:3px;cursor:pointer;">預設</button>
+                    <button onclick="window.skyPreset('clear')" style="font-size:10px;padding:2px 6px;background:#345;border:none;color:#cde;border-radius:3px;cursor:pointer;">晴朗</button>
+                    <button onclick="window.skyPreset('overcast')" style="font-size:10px;padding:2px 6px;background:#345;border:none;color:#cde;border-radius:3px;cursor:pointer;">陰天</button>
+                    <button onclick="window.skyPreset('sunset')" style="font-size:10px;padding:2px 6px;background:#345;border:none;color:#cde;border-radius:3px;cursor:pointer;">黃昏</button>
+                    <button onclick="window.skyPreset('night')" style="font-size:10px;padding:2px 6px;background:#345;border:none;color:#cde;border-radius:3px;cursor:pointer;">夜晚</button>
+                    <button onclick="window.skyPreset('dawn')" style="font-size:10px;padding:2px 6px;background:#345;border:none;color:#cde;border-radius:3px;cursor:pointer;">清晨</button>
+                </div>
+            </div>
+
+            <div style="margin-bottom:6px;border-top:1px solid #234;padding-top:6px;">
                 <div style="color:#9cc;margin-bottom:3px;">霧色</div>
                 <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">
                     <input type="color" id="fog-color" value="#5a7a8c"
@@ -613,10 +630,10 @@
             </div>
             <div style="border-top:1px solid #234;padding-top:6px;">
                 <div style="color:#cc9;margin-bottom:3px;display:flex;justify-content:space-between;">
-                    <span>曝光（對比）</span>
-                    <span id="exposure-val">0.88</span>
+                    <span>曝光（對比，0.4 最深 / 1.5 最亮）</span>
+                    <span id="exposure-val">0.40</span>
                 </div>
-                <input type="range" id="exposure-slider" min="0.4" max="1.5" step="0.02" value="0.88"
+                <input type="range" id="exposure-slider" min="0.4" max="1.5" step="0.02" value="0.4"
                        oninput="window.setExposureSlider(this.value)"
                        style="width:100%;">
             </div>

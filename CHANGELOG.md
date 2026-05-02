@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.7.2（2026-05-02）— 天空可調 + 曝光預設最低
+- 配色面板新增「天空」區塊：高 / 中 / 地平線 三色獨立 picker + 6 個 preset（預設 / 晴朗白天 / 陰天 / 黃昏 / 夜晚 / 清晨）
+- 曝光預設值從 0.88 改為 **0.40**（範圍最低、最深、最高對比）
+- Scene 加 `setSkyColors({ top, mid, horizon })` 方法操作 sky shader uniforms
+- 天空偏好存於 localStorage：`flightSimSkyTop / flightSimSkyMid / flightSimSkyHorizon`
+- cache buster 更新為 `v=20260502-sky`
+
 ## v2.7.1（2026-05-02）— 配色面板可即時預覽
 - GameScene 改 eager init（模組載入時就建立），原本 lazy init 導致使用者在 setup 階段拉色票時 gameScene 還不存在，動作沒生效
 - 設定畫面背景透明度 `0.95 → 0.78`，色票拖動時可即時看到背景場景變色

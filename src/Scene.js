@@ -16,7 +16,7 @@ export class GameScene {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 0.88;  // <1 拉高對比、加深陰影
+        this.renderer.toneMappingExposure = 0.4;   // 預設最低（最深、最高對比），可由配色面板滑桿調整
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         document.body.appendChild(this.renderer.domElement);
 
@@ -47,6 +47,14 @@ export class GameScene {
 
     setExposure(v) {
         this.renderer.toneMappingExposure = v;
+    }
+
+    setSkyColors({ top, mid, horizon }) {
+        if (!this._skyMat) return;
+        const u = this._skyMat.uniforms;
+        if (top != null) u.topColor.value.setHex(top);
+        if (mid != null) u.midColor.value.setHex(mid);
+        if (horizon != null) u.horizonColor.value.setHex(horizon);
     }
 
     _createSkyDome() {
@@ -84,6 +92,7 @@ export class GameScene {
             side: THREE.BackSide
         });
         this.scene.add(new THREE.Mesh(skyGeo, skyMat));
+        this._skyMat = skyMat;
 
         // 太陽
         const sunDir = new THREE.Vector3(150, 180, -250).normalize();
