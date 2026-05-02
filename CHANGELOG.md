@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.7.1（2026-05-02）— 配色面板可即時預覽
+- GameScene 改 eager init（模組載入時就建立），原本 lazy init 導致使用者在 setup 階段拉色票時 gameScene 還不存在，動作沒生效
+- 設定畫面背景透明度 `0.95 → 0.78`，色票拖動時可即時看到背景場景變色
+- animate loop 在 SETUP / LEVEL_SELECT 狀態也呼叫 `gameScene.render()`，讓背景持續更新
+- 載入時自動套用 localStorage 偏好（之前只在進關卡時才套）
+- cache buster 更新為 `v=20260502-eager`
+
 ## v2.7（2026-05-02）— 場景配色面板
 - 左上角新增 🎨 場景配色 浮動面板（點開合），即時調 + 偏好存 localStorage
 - **草地**：外圈 / 內圈 各自 color picker + 5 個 preset（預設 / 鮮 / 深 / 高爾夫 / 森林）

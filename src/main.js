@@ -19,7 +19,9 @@ try {
 } catch (e) {}
 
 const input = new InputController();
-let physics, gameScene, levelManager, audioEngine;
+let physics, levelManager, audioEngine;
+const gameScene = new GameScene();   // eager init：讓配色面板可即時預覽
+applySavedSceneColors();              // 套用 localStorage 偏好（草地/霧/曝光）
 const clock = new THREE.Clock();
 const MODE_NAMES = {
     [FLIGHT_MODES.ANGLE]: '自穩',
@@ -525,10 +527,8 @@ function startGame() {
 
     if (!physics) {
         physics = new PhysicsEngine();
-        gameScene = new GameScene();
         levelManager = new LevelManager(gameScene);
         audioEngine = new AudioEngine();
-        applySavedSceneColors();
     }
     physics.reset();
     if (gameScene) gameScene.resetCamera();
@@ -715,8 +715,10 @@ function showPhysPanel(show) {
 // --- 主迴圈 ---
 function animate() {
     requestAnimationFrame(animate);
-    if (appState === 'SETUP') {
+    if (appState === 'SETUP' || appState === 'LEVEL_SELECT') {
         updateSetupUI();
+        // 讓配色面板可即時預覽：即使在 setup / 選關階段也持續 render 場景
+        if (gameScene) gameScene.render();
     } else if (appState === 'GAME') {
       try {
         const dt = Math.min(clock.getDelta(), 0.1);
