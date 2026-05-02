@@ -284,8 +284,11 @@ export class InputController {
                 this._disarmHoldStart = null;
             }
         } else {
-            const armVal = gp.axes[ax.arm] || -1;
-            this.state.armed = armVal > 0.5;
+            // 有綁 arm 通道時受冷卻期保護，避免進新關卡瞬間 arm
+            if (now_t >= (this._noArmUntil || 0)) {
+                const armVal = gp.axes[ax.arm] || -1;
+                this.state.armed = armVal > 0.5;
+            }
         }
 
         // 模式切換（四段開關，mode 軸未設定時維持現有模式）

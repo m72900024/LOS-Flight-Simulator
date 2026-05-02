@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.11.4（2026-05-02）— 進新關卡 arm 防線收緊
+- 補上 ax.arm 通道路徑也受 `_noArmUntil` 冷卻期保護（之前漏掉，可能是「綁了 arm 軸的玩家進新關卡瞬間 arm」的真正原因）
+- main.js animate 加最終防線：冷卻期間每幀強制壓回 `armed=false`，無論 input.update() 想怎麼改
+- HUD 加冷卻期粉色倒數提示「🆕 新關卡 XXms」，玩家能看到冷卻期還剩多久
+- cache buster 更新為 `v=20260502-armforce`
+
 ## v2.11.3（2026-05-02）
 - 修正進新關卡仍可飛的 race condition bug：
   - 加 `_noArmUntil` 300ms 解鎖冷卻期，期間任何 arm 路徑都不生效

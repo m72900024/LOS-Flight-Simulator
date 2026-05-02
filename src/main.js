@@ -894,6 +894,11 @@ function animate() {
       try {
         const dt = Math.min(clock.getDelta(), 0.1);
         const inp = input.update();
+        // 冷卻期最終防線：不管 inp.update 怎麼把 armed 改成 true，這裡都強制壓回
+        if (input._noArmUntil && performance.now() < input._noArmUntil) {
+            input.state.armed = false;
+            inp.armed = false;
+        }
         physics.update(dt, inp);
         // 落地自動上鎖（Physics 偵測 → 旗標 → 此處執行）
         if (physics.shouldAutoDisarm) {
@@ -912,7 +917,12 @@ function animate() {
         domCache.statAlt.innerText = `ALT: ${physics.pos.y.toFixed(1)}m`;
 
         domCache.statMode.innerText = 'MODE: '+(MODE_NAMES[inp.flightMode]||'?');
-        if (inp.armProgress && inp.armProgress > 0) {
+        // 冷卻期提示優先（淡粉色 "🆕 新關卡 Xms"）
+        const cooldownMs = (input._noArmUntil || 0) - performance.now();
+        if (cooldownMs > 0) {
+            domCache.statArmed.innerText = `🆕 新關卡 ${Math.ceil(cooldownMs)}ms`;
+            domCache.statArmed.style.color = '#ff99cc';
+        } else if (inp.armProgress && inp.armProgress > 0) {
             domCache.statArmed.innerText = `🤘 ARMING ${Math.round(inp.armProgress*100)}%`;
             domCache.statArmed.style.color = '#ffaa00';
         } else if (inp.armProgress && inp.armProgress < 0) {
