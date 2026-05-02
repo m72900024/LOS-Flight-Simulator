@@ -604,6 +604,14 @@ function startGame() {
     physics.reset();
     if (gameScene) gameScene.resetCamera();
     levelManager.loadLevel(selectedLevel);
+
+    // 每進新關卡都重置為「未解鎖 + 油門中位」狀態，使用者需重新 arm
+    input.state.armed = false;
+    input.state.t = (CONFIG.joystickType === 'centering') ? 0.5 : 0;
+    input.state.armProgress = 0;
+    input._armHoldStart = null;
+    input._disarmHoldStart = null;
+
     appState = 'GAME';
     showPhysPanel(true);
     clock.start();

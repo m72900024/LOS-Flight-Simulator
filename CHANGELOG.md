@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.9.2（2026-05-02）
+- 每進新關卡 / 重新進入關卡時，drone 強制重置為「未解鎖 + 油門中位」狀態，使用者需重新 arm（更接近真實飛行操作）
+- 同步清空手勢 hold 進度（`armProgress / _armHoldStart / _disarmHoldStart`），避免上一關殘留計時誤觸發
+- cache buster 更新為 `v=20260502-relock`
+
 ## v2.9.1（2026-05-02）
 - 三項操作回饋修正：
   - 內八/外八手勢 hold 時間 **2 秒 → 1 秒**（更不囉嗦）
