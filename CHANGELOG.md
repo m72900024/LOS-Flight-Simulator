@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.10（2026-05-02）— 真實飛行流程兩件
+- **落地自動上鎖**：曾起飛（pos.y > 0.5m）→ 落地停穩（pos.y < 3× hardDeck 且 |vel| < 0.5 m/s）持續 1.5 秒 → 自動 disarm，模擬真實 RC 飛行的 auto-disarm
+- **未解鎖推油門 → 黃字閃爍警告**：HUD 顯示「⚠️ 請先解鎖！」（每 0.2 秒閃爍），閾值 inp.t > 0.6（避免置中桿 ALT_HOLD 預設 0.5 誤觸發）
+- Physics 加 `shouldAutoDisarm` 旗標，main.js 動畫迴圈接到後執行 disarm
+- cache buster 更新為 `v=20260502-autodisarm`
+
 ## v2.9.3（2026-05-02）
 - 內八/外八手勢 hold 時間 **1 秒 → 0.5 秒**，幾乎是按下去瞬間生效（保留進度條視覺）
 - cache buster 更新為 `v=20260502-arm05`

@@ -10,6 +10,10 @@ export class PhysicsEngine {
         this.altHoldTarget = null;
         // 風力陣風狀態（致謝 tamago797 風力構想，改寫為 dt-based）
         this._wind = { vx: 0, vy: 0, vz: 0, tx: 0, ty: 0, tz: 0, timer: 0 };
+        // 落地自動上鎖：曾起飛 → 落地 1.5 秒 → shouldAutoDisarm 旗標給 main loop
+        this._hasFlown = false;
+        this._landedTimer = 0;
+        this.shouldAutoDisarm = false;
 
         // Pre-allocated temporary objects to reduce GC pressure
         this._tmpVec1 = new THREE.Vector3();
@@ -49,6 +53,28 @@ export class PhysicsEngine {
     }
 
     update(dt, input) {
+        // 落地自動上鎖偵測：曾飛上 0.5m 以上 → 落地停穩 > 1.5 秒 → 旗標 shouldAutoDisarm
+        this.shouldAutoDisarm = false;
+        if (input.armed) {
+            if (this.pos.y > 0.5) this._hasFlown = true;
+            if (this._hasFlown) {
+                const onGround = this.pos.y < CONFIG.hardDeck * 3 && this.vel.length() < 0.5;
+                if (onGround) {
+                    this._landedTimer += dt;
+                    if (this._landedTimer > 1.5) {
+                        this.shouldAutoDisarm = true;
+                        this._hasFlown = false;
+                        this._landedTimer = 0;
+                    }
+                } else {
+                    this._landedTimer = 0;
+                }
+            }
+        } else {
+            this._hasFlown = false;
+            this._landedTimer = 0;
+        }
+
         // --- 1. 推力與重力 ---
         // 油門指數曲線：低油門更細膩，高油門更猛
         const expo = CONFIG.thrustExpo || 0;

@@ -803,6 +803,14 @@ function animate() {
         const dt = Math.min(clock.getDelta(), 0.1);
         const inp = input.update();
         physics.update(dt, inp);
+        // 落地自動上鎖（Physics 偵測 → 旗標 → 此處執行）
+        if (physics.shouldAutoDisarm) {
+            input.state.armed = false;
+            inp.armed = false;
+            window.dispatchEvent(new CustomEvent('input-mode-change', {
+                detail: '🔒 落地自動上鎖'
+            }));
+        }
         gameScene.setWind({ x: physics._wind.vx, y: physics._wind.vy, z: physics._wind.vz });
         gameScene.updateDrone(physics.pos, physics.quat, inp.t, physics.crashIntensity, inp.armed, dt);
         if (audioEngine) audioEngine.updateMotor(inp.t, inp.armed);
@@ -818,6 +826,11 @@ function animate() {
         } else if (inp.armProgress && inp.armProgress < 0) {
             domCache.statArmed.innerText = `🤙 DISARMING ${Math.round(-inp.armProgress*100)}%`;
             domCache.statArmed.style.color = '#ffaa00';
+        } else if (!inp.armed && inp.t > 0.6) {
+            // 未解鎖卻推油門 → 黃字閃爍提示
+            const flash = Math.floor(Date.now() / 200) % 2 === 0;
+            domCache.statArmed.innerText = flash ? '⚠️ 請先解鎖！' : '🔒 DISARMED';
+            domCache.statArmed.style.color = flash ? '#ffff00' : '#ff3333';
         } else {
             domCache.statArmed.innerText = inp.armed ? 'ARMED' : 'DISARMED';
             domCache.statArmed.style.color = inp.armed ? '#00ff00' : '#ff3333';
