@@ -564,8 +564,16 @@
             if (tb) tb.style.display = 'none';
         }
     </script>
-    <script type="module" src="./src/main.js?v=20260502-fig8x"></script>
-    <div id="build-tag" style="position:fixed;bottom:4px;right:6px;font-size:10px;color:#456;font-family:monospace;pointer-events:none;z-index:9999;">build: 20260502-fig8x</div>
+    <script type="module" src="./src/main.js?v=20260502-radar"></script>
+    <div id="build-tag" style="position:fixed;bottom:4px;right:6px;font-size:10px;color:#456;font-family:monospace;pointer-events:none;z-index:9999;">build: 20260502-radar</div>
+
+    <div id="radar-box" style="position:fixed;bottom:18px;right:14px;width:160px;height:160px;background:rgba(8,16,24,0.85);border:1px solid #2a4a5a;border-radius:8px;padding:6px;font-family:system-ui,sans-serif;z-index:9997;display:none;backdrop-filter:blur(4px);">
+        <div style="font-size:10px;color:#88aaff;margin-bottom:3px;display:flex;justify-content:space-between;">
+            <span>📡 雷達</span>
+            <span id="radar-coords" style="color:#678;font-size:9px;">x:0 z:0</span>
+        </div>
+        <canvas id="radar-canvas" width="148" height="130" style="display:block;"></canvas>
+    </div>
 
     <div id="color-tuner" style="position:fixed;top:8px;left:8px;background:rgba(15,20,30,0.92);border:1px solid #345;border-radius:8px;padding:8px;font-size:11px;color:#cde;font-family:system-ui,sans-serif;z-index:9998;min-width:200px;backdrop-filter:blur(4px);">
         <div style="cursor:pointer;font-weight:bold;color:#88ddff;display:flex;justify-content:space-between;align-items:center;" onclick="window.toggleColorTuner()">

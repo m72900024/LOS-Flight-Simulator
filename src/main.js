@@ -789,7 +789,95 @@ function showPhysPanel(show) {
     if (!toggle || !panel) return;
     toggle.style.display = show ? 'flex' : 'none';
     if (!show) { panel.classList.remove('open'); toggle.classList.remove('active'); }
+    const radar = document.getElementById('radar-box');
+    if (radar) radar.style.display = show ? 'block' : 'none';
 }
+
+// === 2D 雷達 ===
+const _radar = (() => {
+    const canvas = document.getElementById('radar-canvas');
+    if (!canvas) return null;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const VIEW = 30; // 顯示範圍 ±VIEW 公尺
+    const SCALE = Math.min(W, H) / (VIEW * 2);
+    const cx = W / 2, cy = H / 2;
+
+    // world (x, z) → canvas (px, py)；z 軸反向以對齊「畫面上方=北=z 負」
+    const mx = wx => cx + wx * SCALE;
+    const my = wz => cy + wz * SCALE;
+
+    return {
+        draw(physics, levelManager) {
+            ctx.clearRect(0, 0, W, H);
+
+            // 場地外框
+            ctx.strokeStyle = 'rgba(80,120,150,0.4)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(2, 2, W-4, H-4);
+
+            // 中央測驗區 (4×12m)
+            ctx.strokeStyle = 'rgba(255,140,0,0.55)';
+            ctx.strokeRect(mx(-6), my(-2), 12*SCALE, 4*SCALE);
+
+            // 雙圓考場
+            [-6, 6].forEach(ccx => {
+                // 外圓 8m
+                ctx.strokeStyle = 'rgba(192,255,96,0.7)';
+                ctx.beginPath(); ctx.arc(mx(ccx), my(0), 8*SCALE, 0, Math.PI*2); ctx.stroke();
+                // 內圓 4m
+                ctx.strokeStyle = 'rgba(192,255,96,0.85)';
+                ctx.beginPath(); ctx.arc(mx(ccx), my(0), 4*SCALE, 0, Math.PI*2); ctx.stroke();
+                // 圓心
+                ctx.fillStyle = 'rgba(192,255,96,0.5)';
+                ctx.beginPath(); ctx.arc(mx(ccx), my(0), 1.5, 0, Math.PI*2); ctx.fill();
+            });
+
+            // H 點（原點）
+            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            ctx.beginPath(); ctx.arc(mx(0), my(0), 2.5, 0, Math.PI*2); ctx.fill();
+
+            // 當前 active waypoint（紅色閃爍）
+            if (levelManager && levelManager.activeTarget) {
+                const t = levelManager.activeTarget;
+                const blink = (Math.floor(Date.now()/300) % 2) === 0;
+                ctx.fillStyle = blink ? '#ff3333' : 'rgba(255,80,80,0.45)';
+                ctx.beginPath(); ctx.arc(mx(t.x), my(t.z), 4, 0, Math.PI*2); ctx.fill();
+            }
+
+            // Drone 三角形指示器（朝向跟著機頭轉）
+            const px = mx(physics.pos.x);
+            const py = my(physics.pos.z);
+            // 機頭朝向：euler.y 負 = 順時針；雷達 y 軸反向所以也要對應反
+            _radarEuler.setFromQuaternion(physics.quat, 'YXZ');
+            const yaw = _radarEuler.y;
+            ctx.save();
+            ctx.translate(px, py);
+            ctx.rotate(-yaw);
+            ctx.fillStyle = '#33ff66';
+            ctx.beginPath();
+            ctx.moveTo(0, -7);
+            ctx.lineTo(5, 5);
+            ctx.lineTo(0, 2);
+            ctx.lineTo(-5, 5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            // 高度警告環（< 0.3m 紅、> 40m 黃）
+            if (physics.pos.y > 40) {
+                ctx.strokeStyle = '#ffaa00';
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(px, py, 9, 0, Math.PI*2); ctx.stroke();
+            }
+        },
+        updateCoords(physics) {
+            const el = document.getElementById('radar-coords');
+            if (el) el.textContent = `x:${physics.pos.x.toFixed(1)} z:${physics.pos.z.toFixed(1)}`;
+        }
+    };
+})();
+const _radarEuler = new THREE.Euler();
 
 // --- 主迴圈 ---
 function animate() {
@@ -858,6 +946,12 @@ function animate() {
         const dirs = ['N','NE','E','SE','S','SW','W','NW'];
         const dirIdx = Math.round(yawDeg / 45) % 8;
         domCache.statHeading.innerText = `方向: ${dirs[dirIdx]}`;
+
+        // 雷達更新
+        if (_radar) {
+            _radar.draw(physics, levelManager);
+            _radar.updateCoords(physics);
+        }
 
         gameScene.render();
       } catch(e) {

@@ -350,7 +350,9 @@ export class LevelManager {
     }
 
     _setupExam(grp) {
-        const P1 = [-5, 0, -5], P2 = [5, 0, -5], P3 = [5, 0, -15], P4 = [-5, 0, -15];
+        // P1-P4 對齊 v2.8 雙圓考場（圓心 ±6，內 4m）
+        // 矩形 12m × 4m 沿中央通道（z=±2），剛好把兩圓圓心連成矩形對角
+        const P1 = [ 6, 0,  2], P2 = [ 6, 0, -2], P3 = [-6, 0, -2], P4 = [-6, 0,  2];
         const ALT = 1.5;
 
         // Orange cone markers at P1-P4 with labels
