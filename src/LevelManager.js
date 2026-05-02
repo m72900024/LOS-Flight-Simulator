@@ -597,6 +597,8 @@ export class LevelManager {
             const next = this.currentLevel < 8 ? this.currentLevel + 1 : 1;
             this.loadLevel(next);
             window.dispatchEvent(new Event('reset-drone'));
+            // 進下一關必須重置 arm 狀態（跟 startGame 一樣）
+            window.dispatchEvent(new Event('level-changed'));
         };
     }
 }

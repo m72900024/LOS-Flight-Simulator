@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.11.5（2026-05-02）— 揪出 arm 重置真正的 bug
+- **真正原因**：過關後「下一關」按鈕（`btn-next.onclick`）直接呼叫 `levelManager.loadLevel(next)`，**完全沒走 `startGame()`**，所以 armed=false / 冷卻期 / 邊緣防殘留 全部 bypass，armed 保持上一關的 true 直接可飛
+- 修法：
+  - 抽出共用 `resetArmStateForNewLevel()` 函式
+  - 「下一關」按鈕 dispatch `level-changed` event
+  - main.js 監聽 event → 呼叫 reset 函式
+  - 順便重置 `physics._hasFlown / _landedTimer`，避免 auto-disarm 邏輯帶舊狀態
+- cache buster 更新為 `v=20260502-nextlvl`
+
 ## v2.11.4（2026-05-02）— 進新關卡 arm 防線收緊
 - 補上 ax.arm 通道路徑也受 `_noArmUntil` 冷卻期保護（之前漏掉，可能是「綁了 arm 軸的玩家進新關卡瞬間 arm」的真正原因）
 - main.js animate 加最終防線：冷卻期間每幀強制壓回 `armed=false`，無論 input.update() 想怎麼改

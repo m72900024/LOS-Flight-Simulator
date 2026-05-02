@@ -575,6 +575,23 @@ window.goBackToSetup = function () {
     appState = 'SETUP';
 };
 
+// 進新關卡的 arm 重置邏輯（被 startGame + level-changed event 共用）
+function resetArmStateForNewLevel() {
+    input.state.armed = false;
+    input.state.t = (CONFIG.joystickType === 'centering') ? 0.5 : 0;
+    input.state.armProgress = 0;
+    input._armHoldStart = null;
+    input._disarmHoldStart = null;
+    input._prevBtn0 = true; // 視為已按過，避免按鈕殘留狀態誤觸 rising edge
+    input._noArmUntil = performance.now() + 300; // 300ms 解鎖冷卻期
+    if (physics) {
+        physics._hasFlown = false;
+        physics._landedTimer = 0;
+    }
+}
+
+window.addEventListener('level-changed', resetArmStateForNewLevel);
+
 function startGame() {
     document.getElementById('level-select').style.display = 'none';
     document.getElementById('ui-layer').style.display = 'flex';
@@ -605,16 +622,7 @@ function startGame() {
     if (gameScene) gameScene.resetCamera();
     levelManager.loadLevel(selectedLevel);
 
-    // 每進新關卡都重置為「未解鎖 + 油門中位」狀態，使用者需重新 arm
-    input.state.armed = false;
-    input.state.t = (CONFIG.joystickType === 'centering') ? 0.5 : 0;
-    input.state.armProgress = 0;
-    input._armHoldStart = null;
-    input._disarmHoldStart = null;
-    // 同步重置 button 0 邊緣偵測，避免上一關殘留按鈕狀態誤觸發
-    input._prevBtn0 = true;
-    // 300ms 解鎖冷卻期：避免 race condition 讓任何 arm 路徑（gesture / button / Space）首幀就觸發
-    input._noArmUntil = performance.now() + 300;
+    resetArmStateForNewLevel();
 
     appState = 'GAME';
     showPhysPanel(true);
