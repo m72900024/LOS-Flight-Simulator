@@ -27,6 +27,7 @@ export class GameScene {
         this.clouds = [];
         this.windSock = null;
         this._navLights = [];
+        this._hMarkers = [];   // H 字 mesh（drone < 1m 時動態亮綠）
 
         this._createSkyDome();
         this._initLights();
@@ -191,11 +192,55 @@ export class GameScene {
         this.scene.add(grid);
 
         this._createLandingPad();
+        this._createExamCircles();
         this._createRunwayLines();
         this._createTrees();
         this._createBuildings();
         this._createFence();
         this._createWindSock();
+    }
+
+    _createExamCircles() {
+        // 對標台灣 CAA AC107-005A 多旋翼基本級術科考場（致敬 tamago797 設計）
+        // 雙圓設計（左右各一），用於四面定點懸停與矩形航線練習
+        // 圓心 (±6, 0)；內 4m / 中 6m（虛線）/ 外 8m
+        const NEON = 0xc0ff60;
+        const DASH = 0x66bbff;
+
+        const drawCircle = (cx, cz, radius, color, dashed = false) => {
+            const segs = 96;
+            const pts = [];
+            for (let i = 0; i <= segs; i++) {
+                const a = (i / segs) * Math.PI * 2;
+                pts.push(new THREE.Vector3(cx + Math.cos(a) * radius, 0.025, cz + Math.sin(a) * radius));
+            }
+            const geo = new THREE.BufferGeometry().setFromPoints(pts);
+            const mat = dashed
+                ? new THREE.LineDashedMaterial({ color, dashSize: 0.4, gapSize: 0.25, transparent: true, opacity: 0.7 })
+                : new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.85 });
+            const line = new THREE.Line(geo, mat);
+            if (dashed) line.computeLineDistances();
+            this.scene.add(line);
+        };
+
+        [-6, 6].forEach(cx => {
+            drawCircle(cx, 0, 4, NEON);
+            drawCircle(cx, 0, 6, DASH, true);
+            drawCircle(cx, 0, 8, NEON);
+        });
+
+        // 中央測驗區方框（兩圓共用測驗邊界，4m × 28m，沿 X 軸貫穿雙圓）
+        const boxPts = [
+            new THREE.Vector3(-14, 0.022, -2),
+            new THREE.Vector3( 14, 0.022, -2),
+            new THREE.Vector3( 14, 0.022,  2),
+            new THREE.Vector3(-14, 0.022,  2),
+            new THREE.Vector3(-14, 0.022, -2),
+        ];
+        const boxGeo = new THREE.BufferGeometry().setFromPoints(boxPts);
+        const boxLine = new THREE.Line(boxGeo,
+            new THREE.LineBasicMaterial({ color: 0xff8c00, transparent: true, opacity: 0.55 }));
+        this.scene.add(boxLine);
     }
 
     _createRunwayLines() {
@@ -233,16 +278,17 @@ export class GameScene {
         ringInner.rotation.x = -Math.PI / 2; ringInner.position.y = 0.03;
         this.scene.add(ringInner);
 
-        // H 字
-        const hMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        // H 字（每段獨立 material，用於 < 1m 時動態亮綠 — 致敬 tamago797 智慧 H 點構想）
         [
             { w: 0.14, h: 1.30, x: -0.36, z: 0 },
             { w: 0.14, h: 1.30, x:  0.36, z: 0 },
             { w: 0.82, h: 0.14, x:     0, z: 0 }
         ].forEach(b => {
-            const m = new THREE.Mesh(new THREE.PlaneGeometry(b.w, b.h), hMat);
+            const mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const m = new THREE.Mesh(new THREE.PlaneGeometry(b.w, b.h), mat);
             m.rotation.x = -Math.PI / 2; m.position.set(b.x, 0.04, b.z);
             this.scene.add(m);
+            this._hMarkers.push(m);
         });
 
         // 角落琥珀燈
@@ -644,6 +690,14 @@ export class GameScene {
             const on = nl.isFront ? ((navT & 768) > 256) : true;
             nl.mat.color.setHex(on ? (nl.isFront ? 0x33ff66 : 0xff3333) : 0x050505);
         });
+
+        // 智慧 H 停機坪：drone 落在 H 點 1m 內 + 低高度 → 動態亮螢光綠（致敬 tamago797）
+        if (this._hMarkers.length > 0) {
+            const hDist = Math.sqrt(pos.x * pos.x + pos.z * pos.z);
+            const isClose = hDist < 1.0 && pos.y < 1.5 && pos.y >= CONFIG.hardDeck;
+            const targetColor = isClose ? 0x00ff66 : 0xffffff;
+            this._hMarkers.forEach(m => m.material.color.setHex(targetColor));
+        }
 
         // 雲飄移
         for (const cloud of this.clouds) {
