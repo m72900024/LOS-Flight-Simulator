@@ -400,6 +400,12 @@ export class LevelManager {
         ];
         this._examStepIndex = 0;
         this._examHoverTimer = 0;
+
+        // 當前 exam step 的虛擬目標環（紅色薄圓環，每幀跟著當前 step.pos + lookAt(drone)）
+        this._examMarker = this._makeWpSphere([0, ALT, 0], 0xff3333);
+        this._examMarker.scale.setScalar(1.1); // 稍微放大一點更醒目
+        grp.add(this._examMarker);
+
         document.getElementById('instruction').innerText =
             `步驟 1/${this._examSteps.length}: ${this._examSteps[0].label}`;
     }
@@ -538,12 +544,18 @@ export class LevelManager {
             pFill.style.width = (this.cpIndex / this.checkpoints.length * 100) + '%';
 
         } else if (L === 8) {
-            // Guide line to current exam step target
+            // Guide line + 虛擬目標環跟著當前 exam step 走
             const step = this._examSteps[this._examStepIndex];
             if (step) {
                 const target = this._reusableTarget.set(step.pos[0], step.pos[1], step.pos[2]);
                 this.activeTarget = target;
                 this._updateGuideLine(dronePos, target);
+                if (this._examMarker) {
+                    // 升空步驟用 ALT 高度，降落步驟用較低高度（避免馬上撞到地）
+                    const markerY = step.type === 'land' ? 0.3 : step.pos[1];
+                    this._examMarker.position.set(step.pos[0], markerY + bobY, step.pos[2]);
+                    this._examMarker.lookAt(dronePos);
+                }
             }
             this._checkExam(dronePos, dt, pFill, droneVel);
         }
