@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.11.3（2026-05-02）
+- 修正進新關卡仍可飛的 race condition bug：
+  - 加 `_noArmUntil` 300ms 解鎖冷卻期，期間任何 arm 路徑都不生效
+  - 受冷卻保護：button 0 toggle / 內八手勢 / 鍵盤 Space
+  - showGame 同時把 `_prevBtn0` 強制設 true，避免上一關殘留按鈕導致首幀誤觸發 rising edge
+- cache buster 更新為 `v=20260502-armcool`
+
 ## v2.11.2（2026-05-02）
 - L8 模擬考新增虛擬目標環（紅色薄圓環，跟 L3-L7 同款）
 - 跟著當前 exam step.pos 即時移動，每幀 lookAt(drone) 永遠以正面示人

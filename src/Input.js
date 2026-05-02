@@ -31,9 +31,11 @@ export class InputController {
             if (e.repeat) return;
             this.keys[e.code] = true;
 
-            // Space 切換解鎖
+            // Space 切換解鎖（受 _noArmUntil 冷卻期限制）
             if (e.code === 'Space') {
-                this.state.armed = !this.state.armed;
+                if (performance.now() >= (this._noArmUntil || 0)) {
+                    this.state.armed = !this.state.armed;
+                }
                 e.preventDefault();
             }
             // 1/2/3 切換飛行模式
@@ -221,9 +223,10 @@ export class InputController {
             // 初始化時預設解鎖
             if (this.state.armed === undefined) this.state.armed = true;
 
-            // 按鈕 0（Xbox A / PS X / 多數手把預設按鈕）瞬間切換解鎖
+            // 按鈕 0（Xbox A / PS X / 多數手把預設按鈕）瞬間切換解鎖（受 _noArmUntil 冷卻期限制）
             const btn0 = (gp.buttons[0] && gp.buttons[0].pressed) || false;
-            if (btn0 && !this._prevBtn0) {
+            const armCooldownExpired = now_t >= (this._noArmUntil || 0);
+            if (btn0 && !this._prevBtn0 && armCooldownExpired) {
                 this.state.armed = !this.state.armed;
                 if (!this.state.armed) this.state.t = (CONFIG.joystickType === 'centering') ? 0.5 : 0;
                 window.dispatchEvent(new CustomEvent('input-mode-change', {
@@ -261,7 +264,7 @@ export class InputController {
                 this.state.armProgress = 0;
             }
 
-            if (!this.state.armed && isInnerCross) {
+            if (!this.state.armed && isInnerCross && armCooldownExpired) {
                 if (!this._armHoldStart) this._armHoldStart = now_t;
                 if (now_t - this._armHoldStart > 500) {
                     this.state.armed = true;

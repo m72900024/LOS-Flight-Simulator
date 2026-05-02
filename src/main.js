@@ -611,6 +611,10 @@ function startGame() {
     input.state.armProgress = 0;
     input._armHoldStart = null;
     input._disarmHoldStart = null;
+    // 同步重置 button 0 邊緣偵測，避免上一關殘留按鈕狀態誤觸發
+    input._prevBtn0 = true;
+    // 300ms 解鎖冷卻期：避免 race condition 讓任何 arm 路徑（gesture / button / Space）首幀就觸發
+    input._noArmUntil = performance.now() + 300;
 
     appState = 'GAME';
     showPhysPanel(true);
