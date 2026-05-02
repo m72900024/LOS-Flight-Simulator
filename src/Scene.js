@@ -3,7 +3,8 @@ import { CONFIG } from './Config.js';
 export class GameScene {
     constructor() {
         this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.FogExp2(0xbbd8f0, 0.0038);
+        // 霧改深一點 + 密度降低，避免遠處被洗白
+        this.scene.fog = new THREE.FogExp2(0x5a7a8c, 0.0018);
 
         this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 500);
         this.camera.position.set(0, 2.5, 10);
@@ -15,7 +16,7 @@ export class GameScene {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 1.1;
+        this.renderer.toneMappingExposure = 0.88;  // <1 拉高對比、加深陰影
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         document.body.appendChild(this.renderer.domElement);
 
@@ -39,9 +40,9 @@ export class GameScene {
         const skyGeo = new THREE.SphereGeometry(400, 32, 16);
         const skyMat = new THREE.ShaderMaterial({
             uniforms: {
-                topColor:     { value: new THREE.Color(0x1565c0) },
-                midColor:     { value: new THREE.Color(0x64b5f6) },
-                horizonColor: { value: new THREE.Color(0xffcc88) },
+                topColor:     { value: new THREE.Color(0x0a3a78) },
+                midColor:     { value: new THREE.Color(0x3a7ab0) },
+                horizonColor: { value: new THREE.Color(0xc78050) },
             },
             vertexShader: `
                 varying vec3 vWorldPos;
@@ -119,8 +120,8 @@ export class GameScene {
     }
 
     _initLights() {
-        // 主日光（暖色）
-        const dir = new THREE.DirectionalLight(0xfff3e0, 1.4);
+        // 主日光（暖色）— 強度提升，主光更鮮明
+        const dir = new THREE.DirectionalLight(0xfff0d8, 1.7);
         dir.position.set(30, 60, 40);
         dir.castShadow = true;
         dir.shadow.mapSize.set(4096, 4096);
@@ -129,11 +130,11 @@ export class GameScene {
         sc.near = 0.5; sc.far = 200; sc.left = -60; sc.right = 60; sc.top = 60; sc.bottom = -60;
         this.scene.add(dir);
 
-        // 天空半球光（天藍 + 草綠）
-        this.scene.add(new THREE.HemisphereLight(0x87ceeb, 0x4a7c3f, 0.75));
+        // 天空半球光（深一階藍 + 深一階綠）— 強度大幅降低讓陰影回到該有的暗
+        this.scene.add(new THREE.HemisphereLight(0x4a78a8, 0x2d4a25, 0.38));
 
-        // 補光（對側，輕微藍色）
-        const fill = new THREE.DirectionalLight(0xc9e8ff, 0.28);
+        // 補光（對側，輕微藍色）— 強度降低
+        const fill = new THREE.DirectionalLight(0x6a96b8, 0.18);
         fill.position.set(-20, 30, -30);
         this.scene.add(fill);
     }
@@ -142,7 +143,7 @@ export class GameScene {
         // 主地面
         const ground = new THREE.Mesh(
             new THREE.PlaneGeometry(300, 300),
-            new THREE.MeshStandardMaterial({ color: 0x3de651, roughness: 0.8 })
+            new THREE.MeshStandardMaterial({ color: 0x2a6e2a, roughness: 0.85 })
         );
         ground.rotation.x = -Math.PI / 2;
         ground.receiveShadow = true;
@@ -151,7 +152,7 @@ export class GameScene {
         // 飛行區內圈（略淺）
         const innerGround = new THREE.Mesh(
             new THREE.PlaneGeometry(44, 44),
-            new THREE.MeshStandardMaterial({ color: 0x66f59a, roughness: 0.75 })
+            new THREE.MeshStandardMaterial({ color: 0x3d8a3d, roughness: 0.78 })
         );
         innerGround.rotation.x = -Math.PI / 2;
         innerGround.position.y = 0.005;
