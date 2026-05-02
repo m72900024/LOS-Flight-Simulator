@@ -350,9 +350,9 @@ export class LevelManager {
     }
 
     _setupExam(grp) {
-        // P1-P4 對齊 v2.8 雙圓考場（圓心 ±6，內 4m）
-        // 矩形 12m × 4m 沿中央通道（z=±2），剛好把兩圓圓心連成矩形對角
-        const P1 = [ 6, 0,  2], P2 = [ 6, 0, -2], P3 = [-6, 0, -2], P4 = [-6, 0,  2];
+        // P1-P4 放在「雙圓內圓 4m 邊緣」（圓心 ±6, 邊緣 z=±4），與 L7 八字檢查點同位置
+        // 矩形 12m × 8m，繞兩圓內圓走完整一圈，符合 CAA「四角點 + 矩形航線」
+        const P1 = [ 6, 0,  4], P2 = [ 6, 0, -4], P3 = [-6, 0, -4], P4 = [-6, 0,  4];
         const ALT = 1.5;
 
         // Orange cone markers at P1-P4 with labels

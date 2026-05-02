@@ -229,13 +229,13 @@ export class GameScene {
             drawCircle(cx, 0, 8, NEON);
         });
 
-        // 中央測驗區方框（4m × 12m，沿 X 軸連接兩圓圓心，對應 L8 矩形航線 P1-P4）
+        // 中央測驗區方框（12m × 8m，貼合 L8 矩形 P1-P4 與 L7 八字 4 角同位置）
         const boxPts = [
-            new THREE.Vector3(-6, 0.022, -2),
-            new THREE.Vector3( 6, 0.022, -2),
-            new THREE.Vector3( 6, 0.022,  2),
-            new THREE.Vector3(-6, 0.022,  2),
-            new THREE.Vector3(-6, 0.022, -2),
+            new THREE.Vector3(-6, 0.022, -4),
+            new THREE.Vector3( 6, 0.022, -4),
+            new THREE.Vector3( 6, 0.022,  4),
+            new THREE.Vector3(-6, 0.022,  4),
+            new THREE.Vector3(-6, 0.022, -4),
         ];
         const boxGeo = new THREE.BufferGeometry().setFromPoints(boxPts);
         const boxLine = new THREE.Line(boxGeo,

@@ -816,9 +816,9 @@ const _radar = (() => {
             ctx.lineWidth = 1;
             ctx.strokeRect(2, 2, W-4, H-4);
 
-            // 中央測驗區 (4×12m)
+            // 中央測驗區 (12×8m，對齊 L7 八字角 + L8 矩形 P 點)
             ctx.strokeStyle = 'rgba(255,140,0,0.55)';
-            ctx.strokeRect(mx(-6), my(-2), 12*SCALE, 4*SCALE);
+            ctx.strokeRect(mx(-6), my(-4), 12*SCALE, 8*SCALE);
 
             // 雙圓考場
             [-6, 6].forEach(ccx => {
