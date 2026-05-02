@@ -367,6 +367,16 @@ python3 -m http.server 8000
 
 - **台灣交通部民航局** — [AC107-005 遙控無人機術科測驗規範](https://www.caa.gov.tw/article.aspx?a=2621&lang=1) 為 L8 模擬考試的設計依據。
 - **Betaflight** — 飛行模式（ANGLE / HORIZON / ACRO）、Rates 系統與 Expo 曲線的設計參考。
+- **[@tamago797](https://github.com/tamago797)** — 開源無人機術科模擬器先行者，本專案的「雙圓考場標線」（內 4m / 中 6m 虛線 / 外 8m）與「智慧 H 停機坪 < 1m 動態亮綠」設計取材自其 [Drone-Simulator-](https://github.com/tamago797/Drone-Simulator-)，依公開授權聲明取用。
+
+## 相關工具
+
+想完整準備台灣 CAA 無人機基本級考試？建議搭配：
+
+- 🎯 **本專案 LOS-Flight-Simulator** — 術科 8 關卡 + L8 模擬考
+- 📝 **[tamago797/Drone-Exam](https://github.com/tamago797/Drone-Exam)** — 學科 40 題隨機抽題模擬
+
+兩者並用即可一站式練習術科 + 學科。
 
 ## 授權
 

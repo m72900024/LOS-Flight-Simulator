@@ -1,10 +1,10 @@
 # Changelog
 
 ## v2.8（2026-05-02）— 雙圓考場 + 智慧 H 點亮（致敬 tamago797）
-- 經 tamago797（陳澤權）2026-04-22 [Facebook 公開授權](https://www.facebook.com/groups/617255772136182/posts/2279968069198269/) 後重新採用：
+- 經 tamago797 2026-04-22 [Facebook 公開授權](https://www.facebook.com/groups/617255772136182/posts/2279968069198269/) 後重新採用：
   - **雙圓考場標線**：對應 CAA AC107-005A 多旋翼基本級術科考場（圓心 ±6，內 4m / 中 6m 虛線 / 外 8m），加中央 4m × 28m 測驗區方框
   - **智慧 H 停機坪**：drone < 1m + 低高度 → H 字動態亮螢光綠，協助降落判定精準度
-- README 加致謝段（陳澤權 / tamago797）+ 引用 Facebook 授權連結
+- README 加致謝段（@tamago797）+ 引用 Facebook 授權連結
 - README 加「相關工具」段，導流到 [tamago797/Drone-Exam](https://github.com/tamago797/Drone-Exam) 學科筆試模擬
 - 風力 / 雷達兩項功能仍未引入（前者新手不友善、後者跟現有紅圓環+lookAt 重複）
 - cache buster 更新為 `v=20260502-examfield`
