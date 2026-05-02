@@ -273,18 +273,22 @@ export class LevelManager {
     }
 
     _setupFigure8(grp) {
-        // 兩根柱子
+        // 兩根柱子置於雙圓考場圓心（v2.8 雙圓考場 ±6, 0），讓 8 字飛行繞著真實考場走
         const poleGeo = new THREE.CylinderGeometry(0.2, 0.2, 6, 8);
         const poleMat = new THREE.MeshStandardMaterial({ color: 0xff4400, emissive: 0x441100 });
         const p1 = new THREE.Mesh(poleGeo, poleMat);
-        p1.position.set(-6, 3, -10); p1.castShadow = true; grp.add(p1);
+        p1.position.set(-6, 3, 0); p1.castShadow = true; grp.add(p1);
         const p2 = new THREE.Mesh(poleGeo, poleMat);
-        p2.position.set(6, 3, -10); p2.castShadow = true; grp.add(p2);
+        p2.position.set(6, 3, 0); p2.castShadow = true; grp.add(p2);
 
-        // 6 個檢查點 (8字形路徑)
+        // 6 個檢查點：繞雙圓內圓（4m）做 8 字，中央交叉於 (0,3,0)
         const cps = [
-            [0, 3, -10], [-6, 3, -16], [-6, 3, -4],
-            [0, 3, -10], [6, 3, -4], [6, 3, -16]
+            [0, 3, 0],      // 中央交叉
+            [-6, 3, 4],     // 左圓近側（z+4，靠玩家側）
+            [-6, 3, -4],    // 左圓遠側
+            [0, 3, 0],      // 中央交叉
+            [6, 3, -4],     // 右圓遠側
+            [6, 3, 4]       // 右圓近側
         ];
         this.checkpoints = cps;
         this._wpBaseY = cps.map(cp => cp[1]);
