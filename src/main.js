@@ -232,8 +232,6 @@ window.startTouch = function () {
     showLevelSelect();
 };
 
-window.startGameApp = function () { showLevelSelect(); };
-
 window.startGamepad = function () {
     showLevelSelect();
 };
