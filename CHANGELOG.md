@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.7.5（2026-05-02）
+- 草地預設色改為「森林」（外 `0x14541a` / 內 `0x2a7a2e`）
+- 原本的中綠預設值保留為「中綠」preset
+- 配色面板「預設」按鈕改為「森林」標籤，新增「中綠」preset 補位
+- cache buster 更新為 `v=20260502-forestdef`
+
 ## v2.7.4（2026-05-02）
 - 修正內八/外八手勢觸發時 `ReferenceError: now_t is not defined` bug
 - 原因：`now_t` 只在 rate mode 油門分支內 declare，但置中桿 + ALT_HOLD 走 position mode，那邊不會 declare，gesture 邏輯讀不到

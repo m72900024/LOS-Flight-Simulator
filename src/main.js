@@ -238,11 +238,11 @@ window.startGamepad = function () {
 
 // === 場景配色控制（即時調整 + localStorage 持久化）===
 const GRASS_PRESETS = {
-    default: { outer: 0x2a8a2a, inner: 0x4cb04c, label: '預設' },
+    default: { outer: 0x14541a, inner: 0x2a7a2e, label: '森林（預設）' },
+    meadow:  { outer: 0x2a8a2a, inner: 0x4cb04c, label: '中綠' },
     vivid:   { outer: 0x2ca02c, inner: 0x55c855, label: '鮮' },
     deep:    { outer: 0x1f6e1f, inner: 0x3a8c3a, label: '深' },
     golf:    { outer: 0x3da53d, inner: 0x5fc855, label: '高爾夫' },
-    forest:  { outer: 0x14541a, inner: 0x2a7a2e, label: '森林' },
 };
 const FOG_PRESETS = {
     default:    { hex: 0x5a7a8c, label: '預設灰藍' },
