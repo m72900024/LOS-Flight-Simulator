@@ -253,24 +253,24 @@ export class InputController {
             // 對外暴露 hold 進度（0~1）給 UI 顯示
             if (isInnerCross && !this.state.armed) {
                 this.state.armProgress = this._armHoldStart
-                    ? Math.min(1, (now_t - this._armHoldStart) / 1000) : 0;
+                    ? Math.min(1, (now_t - this._armHoldStart) / 500) : 0;
             } else if (isOuterCross && this.state.armed) {
                 this.state.armProgress = this._disarmHoldStart
-                    ? -Math.min(1, (now_t - this._disarmHoldStart) / 1000) : 0;
+                    ? -Math.min(1, (now_t - this._disarmHoldStart) / 500) : 0;
             } else {
                 this.state.armProgress = 0;
             }
 
             if (!this.state.armed && isInnerCross) {
                 if (!this._armHoldStart) this._armHoldStart = now_t;
-                if (now_t - this._armHoldStart > 1000) {
+                if (now_t - this._armHoldStart > 500) {
                     this.state.armed = true;
                     this._armHoldStart = null;
                     window.dispatchEvent(new CustomEvent('input-mode-change', { detail: '🔓 已解鎖' }));
                 }
             } else if (this.state.armed && isOuterCross) {
                 if (!this._disarmHoldStart) this._disarmHoldStart = now_t;
-                if (now_t - this._disarmHoldStart > 1000) {
+                if (now_t - this._disarmHoldStart > 500) {
                     this.state.armed = false;
                     this.state.t = 0;
                     this._disarmHoldStart = null;
