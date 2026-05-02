@@ -58,6 +58,17 @@ export class PhysicsEngine {
 
         let thrustMag = input.armed ? (tCurve * CONFIG.thrustPower) : 0;
 
+        // ALT_HOLD 鬆桿時主動水平煞車（DJI 風格 position hold 簡化版）
+        if (input.flightMode === FLIGHT_MODES.ALT_HOLD && input.armed) {
+            const stickActive = Math.abs(input.p) > 0.1 || Math.abs(input.r) > 0.1;
+            if (!stickActive && this.pos.y > CONFIG.hardDeck * 3) {
+                // ~80% 水平速度衰減 / 秒，鬆桿瞬間 brake
+                const damp = Math.pow(0.2, dt);
+                this.vel.x *= damp;
+                this.vel.z *= damp;
+            }
+        }
+
         // ALT_HOLD: override thrust to maintain altitude when throttle is centered
         if (input.flightMode === FLIGHT_MODES.ALT_HOLD && input.armed) {
             const hoverThrust = CONFIG.mass * CONFIG.gravity;
@@ -150,9 +161,10 @@ export class PhysicsEngine {
         }
 
         // --- 2. 姿態控制 ---
-        // 未解鎖時搖桿不應作用：把姿態指令歸零，靠現有 lerp/damping 自然把 rotVel 收斂到 0
-        // yaw sign flip：Three.js 正 Y 旋轉 = 逆時針 = 左轉，符合「左推搖桿=左轉」直覺
-        const aIn = input.armed
+        // 未解鎖 → 搖桿全部歸零；地面（pos.y < ~0.25m）也歸零（必須先升空才能姿態控制）
+        // armed + airborne → yaw sign flip（Three.js Y+ 是 CCW = 左轉，符合直覺）
+        const isAirborne = this.pos.y > CONFIG.hardDeck * 5;
+        const aIn = (input.armed && isAirborne)
             ? { ...input, y: -input.y }
             : { ...input, p: 0, r: 0, y: 0 };
 
