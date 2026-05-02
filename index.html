@@ -564,8 +564,8 @@
             if (tb) tb.style.display = 'none';
         }
     </script>
-    <script type="module" src="./src/main.js?v=20260502-examfield"></script>
-    <div id="build-tag" style="position:fixed;bottom:4px;right:6px;font-size:10px;color:#456;font-family:monospace;pointer-events:none;z-index:9999;">build: 20260502-examfield</div>
+    <script type="module" src="./src/main.js?v=20260502-wind"></script>
+    <div id="build-tag" style="position:fixed;bottom:4px;right:6px;font-size:10px;color:#456;font-family:monospace;pointer-events:none;z-index:9999;">build: 20260502-wind</div>
 
     <div id="color-tuner" style="position:fixed;top:8px;left:8px;background:rgba(15,20,30,0.92);border:1px solid #345;border-radius:8px;padding:8px;font-size:11px;color:#cde;font-family:system-ui,sans-serif;z-index:9998;min-width:200px;backdrop-filter:blur(4px);">
         <div style="cursor:pointer;font-weight:bold;color:#88ddff;display:flex;justify-content:space-between;align-items:center;" onclick="window.toggleColorTuner()">
@@ -635,6 +635,16 @@
                 <input type="range" id="exposure-slider" min="0.4" max="1.5" step="0.02" value="0.4"
                        oninput="window.setExposureSlider(this.value)"
                        style="width:100%;">
+            </div>
+            <div style="border-top:1px solid #234;padding-top:6px;margin-top:6px;">
+                <div style="color:#9ce;margin-bottom:3px;display:flex;justify-content:space-between;">
+                    <span>🌬 風力（0 關 / 1-9 級陣風）</span>
+                    <span id="wind-val">🌤 關閉</span>
+                </div>
+                <input type="range" id="wind-slider" min="0" max="9" step="1" value="0"
+                       oninput="window.setWindLevel(this.value)"
+                       style="width:100%;">
+                <div style="font-size:10px;color:#678;margin-top:2px;">8 方向隨機陣風，每 1-2 秒換向；地面停機不受風影響</div>
             </div>
         </div>
     </div>

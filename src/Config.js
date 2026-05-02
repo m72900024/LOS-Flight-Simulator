@@ -14,6 +14,8 @@ export const CONFIG = {
     maxTiltAngle: 20, droneScale: 3.0,
     // 難度預設：'beginner' | 'normal' | 'expert'，新手最溫和
     difficulty: 'beginner',
+    // 風力等級：0 = 關閉，1-9 = 陣風強度（8 方向隨機 + 約 1-2 秒換向）
+    windLevel: 0,
     // 'centering' = 遊戲手把（油門初值 0.5、預設 ALT_HOLD）；'rc' = 不置中飛手桿（油門 0、預設 ANGLE）
     joystickType: 'centering',
     axes: { thrust: 1, yaw: 0, pitch: 2, roll: 5, arm: -1, mode: -1 },

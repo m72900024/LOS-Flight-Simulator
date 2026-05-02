@@ -336,6 +336,14 @@ window.fogPreset = function (name) {
     const el = document.getElementById('fog-color');
     if (el) el.value = hexToCss(p.hex);
 };
+window.setWindLevel = function (n) {
+    const lv = Math.max(0, Math.min(9, parseInt(n) || 0));
+    CONFIG.windLevel = lv;
+    const valEl = document.getElementById('wind-val');
+    if (valEl) valEl.textContent = lv === 0 ? '🌤 關閉' : `🌬 ${lv} 級`;
+    try { localStorage.setItem('flightSimWindLevel', String(lv)); } catch (e) {}
+};
+
 window.toggleColorTuner = function () {
     const body = document.getElementById('ct-body');
     if (body) body.style.display = body.style.display === 'none' ? '' : 'none';
@@ -353,6 +361,14 @@ function applySavedSceneColors() {
         const sH = localStorage.getItem('flightSimSkyHorizon');
         // 曝光：預設改為最低 0.4（v2.7.2 之前是 0.88）
         const e = localStorage.getItem('flightSimExposure') || '0.4';
+        const w = localStorage.getItem('flightSimWindLevel');
+        if (w !== null) {
+            CONFIG.windLevel = parseInt(w) || 0;
+            const wEl = document.getElementById('wind-slider');
+            const wVal = document.getElementById('wind-val');
+            if (wEl) wEl.value = w;
+            if (wVal) wVal.textContent = parseInt(w) === 0 ? '🌤 關閉' : `🌬 ${w} 級`;
+        }
         if (o) gameScene.setGrassColors(parseInt(o, 16), null);
         if (i) gameScene.setGrassColors(null, parseInt(i, 16));
         if (f) gameScene.setFogColor(parseInt(f, 16));
@@ -779,6 +795,7 @@ function animate() {
         const dt = Math.min(clock.getDelta(), 0.1);
         const inp = input.update();
         physics.update(dt, inp);
+        gameScene.setWind({ x: physics._wind.vx, y: physics._wind.vy, z: physics._wind.vz });
         gameScene.updateDrone(physics.pos, physics.quat, inp.t, physics.crashIntensity, inp.armed, dt);
         if (audioEngine) audioEngine.updateMotor(inp.t, inp.armed);
         levelManager.checkWinCondition(physics.pos, dt, physics.vel);

@@ -8,6 +8,8 @@ export class PhysicsEngine {
         this.rotVel = new THREE.Vector3(0, 0, 0); // 角速度
         this.crashIntensity = 0;
         this.altHoldTarget = null;
+        // 風力陣風狀態（致謝 tamago797 風力構想，改寫為 dt-based）
+        this._wind = { vx: 0, vy: 0, vz: 0, tx: 0, ty: 0, tz: 0, timer: 0 };
 
         // Pre-allocated temporary objects to reduce GC pressure
         this._tmpVec1 = new THREE.Vector3();
@@ -99,6 +101,32 @@ export class PhysicsEngine {
         const accel = this._tmpVec3.copy(force).divideScalar(CONFIG.mass);
         this.vel.add(accel.multiplyScalar(dt));
         this.pos.add(this._tmpVec3.copy(this.vel).multiplyScalar(dt));
+
+        // 風力陣風（windLevel 0=關閉；1-9 級 8 方向隨機，每 1-2 秒換向）
+        if (CONFIG.windLevel > 0) {
+            this._wind.timer -= dt;
+            if (this._wind.timer <= 0) {
+                this._wind.timer = 1.0 + Math.random();
+                const angle = Math.floor(Math.random() * 8) * (Math.PI / 4);
+                const speed = CONFIG.windLevel * 0.6; // m/s per level
+                this._wind.tx = Math.cos(angle) * speed;
+                this._wind.tz = Math.sin(angle) * speed;
+                this._wind.ty = (Math.random() - 0.5) * speed * 0.3;
+            }
+            // Smooth current toward target（exponential decay，幀率獨立）
+            const k = 1 - Math.pow(0.97, dt * 60);
+            this._wind.vx += (this._wind.tx - this._wind.vx) * k;
+            this._wind.vy += (this._wind.ty - this._wind.vy) * k;
+            this._wind.vz += (this._wind.tz - this._wind.vz) * k;
+            // 飛行中才受風（高度 > 兩倍地面厚度），地面停機不會被風吹走
+            if (this.pos.y > CONFIG.hardDeck * 2) {
+                this.pos.x += this._wind.vx * dt;
+                this.pos.y += this._wind.vy * dt;
+                this.pos.z += this._wind.vz * dt;
+            }
+        } else {
+            this._wind.vx = 0; this._wind.vy = 0; this._wind.vz = 0;
+        }
 
         // Decay crash intensity (frame-rate independent)
         this.crashIntensity *= Math.pow(0.92, dt * 60);

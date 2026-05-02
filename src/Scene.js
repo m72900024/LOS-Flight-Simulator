@@ -651,6 +651,11 @@ export class GameScene {
         this.scene.add(this.droneGroup);
     }
 
+    setWind(windVec) {
+        // 由 Physics 傳進當前風向（用於風向袋同步擺動）
+        this._wind = windVec;
+    }
+
     updateDrone(pos, quat, throttle, crashIntensity = 0, armed = false, dt = 1/60) {
         this.droneGroup.position.copy(pos);
         this.droneGroup.quaternion.copy(quat);
@@ -705,10 +710,16 @@ export class GameScene {
             if (cloud.position.x > 150) cloud.position.x = -150;
         }
 
-        // 風向袋搖擺
+        // 風向袋搖擺：windLevel > 0 時依實際風向擺動，否則用基本擺幅
         if (this.windSock) {
-            this.windSock.rotation.z = Math.sin(Date.now() * 0.0014) * 0.22;
-            this.windSock.rotation.x = Math.sin(Date.now() * 0.0009) * 0.10;
+            if (CONFIG.windLevel > 0 && this._wind) {
+                const sway = Math.min(1, CONFIG.windLevel * 0.12);
+                this.windSock.rotation.z = this._wind.x * sway;
+                this.windSock.rotation.x = -this._wind.z * sway;
+            } else {
+                this.windSock.rotation.z = Math.sin(Date.now() * 0.0014) * 0.22;
+                this.windSock.rotation.x = Math.sin(Date.now() * 0.0009) * 0.10;
+            }
         }
 
         // LOS 第三人稱鏡頭
