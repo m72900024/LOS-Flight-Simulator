@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.12（2026-05-15）— FPV 訓練視角切換
+- 新增 **C 鍵切換 LOS ↔ FPV 視角**（LOS 為預設，FPV 僅做姿態理解輔助，不偏離術科訓練主軸）
+- FPV 模式：camera 跟著 drone 中心 + quaternion 同步，模擬機上鏡頭視角；自動隱藏 drone mesh 避免機殼擋鏡頭
+- HUD 左上加紅字提示「🔴 FPV 訓練視角」（C 切回 LOS）；ESC 返回選關時強制重置回 LOS
+- HUD 右下操作提示更新為「ESC 返回選關 ｜ C 切視角」
+- cache buster 更新為 `v=20260515-fpv`
+
 ## v2.11.5（2026-05-02）— 揪出 arm 重置真正的 bug
 - **真正原因**：過關後「下一關」按鈕（`btn-next.onclick`）直接呼叫 `levelManager.loadLevel(next)`，**完全沒走 `startGame()`**，所以 armed=false / 冷卻期 / 邊緣防殘留 全部 bypass，armed 保持上一關的 true 直接可飛
 - 修法：

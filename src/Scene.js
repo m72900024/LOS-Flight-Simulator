@@ -9,6 +9,7 @@ export class GameScene {
         this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 500);
         this.camera.position.set(0, 2.5, 10);
         this.cameraTarget = new THREE.Vector3(0, 1, 0);
+        this.viewMode = 'LOS';   // 'LOS' = 第三人稱（CAA 術科訓練主軸） / 'FPV' = 第一人稱（姿態理解輔助）
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -48,6 +49,21 @@ export class GameScene {
 
     setExposure(v) {
         this.renderer.toneMappingExposure = v;
+    }
+
+    setViewMode(mode) {
+        this.viewMode = (mode === 'FPV') ? 'FPV' : 'LOS';
+        // FPV 隱藏自機 mesh（避免機殼擋住鏡頭），LOS 恢復可見
+        if (this.droneGroup) this.droneGroup.visible = (this.viewMode === 'LOS');
+        // 切回 LOS 時讓 cameraTarget 立即收斂到 drone，避免 lerp 從前一視角拖出長尾
+        if (this.viewMode === 'LOS' && this.droneGroup) {
+            this.cameraTarget.copy(this.droneGroup.position);
+        }
+    }
+
+    toggleViewMode() {
+        this.setViewMode(this.viewMode === 'LOS' ? 'FPV' : 'LOS');
+        return this.viewMode;
     }
 
     setSkyColors({ top, mid, horizon }) {
@@ -722,18 +738,30 @@ export class GameScene {
             }
         }
 
-        // LOS 第三人稱鏡頭
-        this.cameraTarget.lerp(pos, 1 - Math.pow(1 - 0.08, dt * 60));
-        let camX = 0, camY = 2.5, camZ = 10;
+        if (this.viewMode === 'FPV') {
+            // 第一人稱：camera 跟著 drone 中心與姿態，模擬機上鏡頭視角（訓練用，非競速 FPV 仰角）
+            this.camera.position.copy(pos);
+            this.camera.quaternion.copy(quat);
 
-        if (crashIntensity > 0.01) {
-            camX += (Math.random() - 0.5) * crashIntensity * 0.3;
-            camY += (Math.random() - 0.5) * crashIntensity * 0.3;
-            camZ += (Math.random() - 0.5) * crashIntensity * 0.3;
+            if (crashIntensity > 0.01) {
+                this.camera.position.x += (Math.random() - 0.5) * crashIntensity * 0.3;
+                this.camera.position.y += (Math.random() - 0.5) * crashIntensity * 0.3;
+                this.camera.position.z += (Math.random() - 0.5) * crashIntensity * 0.3;
+            }
+        } else {
+            // LOS 第三人稱鏡頭
+            this.cameraTarget.lerp(pos, 1 - Math.pow(1 - 0.08, dt * 60));
+            let camX = 0, camY = 2.5, camZ = 10;
+
+            if (crashIntensity > 0.01) {
+                camX += (Math.random() - 0.5) * crashIntensity * 0.3;
+                camY += (Math.random() - 0.5) * crashIntensity * 0.3;
+                camZ += (Math.random() - 0.5) * crashIntensity * 0.3;
+            }
+
+            this.camera.position.set(camX, camY, camZ);
+            this.camera.lookAt(this.cameraTarget);
         }
-
-        this.camera.position.set(camX, camY, camZ);
-        this.camera.lookAt(this.cameraTarget);
 
         const overlay = document.getElementById('crash-overlay');
         if (overlay) overlay.style.opacity = crashIntensity > 0.01 ? crashIntensity * 0.5 : 0;

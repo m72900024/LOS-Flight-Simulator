@@ -671,7 +671,17 @@ function updateSetupUI() {
     document.getElementById('txt-mode').innerText = mStr;
 }
 
-// --- ESC 返回 ---
+// --- ESC 返回 / C 切視角 ---
+function applyViewModeHud(mode) {
+    const el = document.getElementById('stat-view');
+    if (!el) return;
+    if (mode === 'FPV') {
+        el.style.display = 'block';
+        el.innerText = '🔴 FPV 訓練視角（C 切回 LOS）';
+    } else {
+        el.style.display = 'none';
+    }
+}
 window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         if (appState === 'GAME') {
@@ -679,7 +689,11 @@ window.addEventListener('keydown', (e) => {
             document.getElementById('ui-layer').style.display = 'none';
             document.getElementById('msg-overlay').style.display = 'none';
             if (physics) physics.reset();
-            if (gameScene) gameScene.resetCamera();
+            if (gameScene) {
+                gameScene.setViewMode('LOS');
+                gameScene.resetCamera();
+            }
+            applyViewModeHud('LOS');
             input.keyThrottle = 0;
             touchInput.hide();
             showPhysPanel(false);
@@ -691,6 +705,9 @@ window.addEventListener('keydown', (e) => {
             input.useTouch = false;
             appState = 'SETUP';
         }
+    } else if (e.code === 'KeyC' && appState === 'GAME' && gameScene) {
+        const mode = gameScene.toggleViewMode();
+        applyViewModeHud(mode);
     }
 });
 window.addEventListener('resize', () => {
