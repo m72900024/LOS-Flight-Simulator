@@ -626,6 +626,7 @@ function startGame() {
 
     appState = 'GAME';
     showPhysPanel(true);
+    applyPovHud();   // 進場顯示目前 LOS 站位
     clock.start();
 }
 
@@ -682,6 +683,17 @@ function applyViewModeHud(mode) {
         el.style.display = 'none';
     }
 }
+// LOS 站位（O 鍵循環）HUD：只在 LOS 模式顯示
+function applyPovHud() {
+    const el = document.getElementById('stat-cam');
+    if (!el || !gameScene) return;
+    if (gameScene.viewMode === 'LOS') {
+        el.style.display = 'block';
+        el.innerText = `🎥 站位：${gameScene.currentPovLabel}`;
+    } else {
+        el.style.display = 'none';
+    }
+}
 window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         if (appState === 'GAME') {
@@ -708,6 +720,10 @@ window.addEventListener('keydown', (e) => {
     } else if (e.code === 'KeyC' && appState === 'GAME' && gameScene) {
         const mode = gameScene.toggleViewMode();
         applyViewModeHud(mode);
+        applyPovHud();   // FPV 時隱藏站位列，切回 LOS 時恢復
+    } else if (e.code === 'KeyO' && appState === 'GAME' && gameScene && gameScene.viewMode === 'LOS') {
+        gameScene.cyclePov();
+        applyPovHud();
     }
 });
 window.addEventListener('resize', () => {
@@ -934,9 +950,9 @@ function animate() {
             }));
         }
         gameScene.setWind({ x: physics._wind.vx, y: physics._wind.vy, z: physics._wind.vz });
-        gameScene.updateDrone(physics.pos, physics.quat, inp.t, physics.crashIntensity, inp.armed, dt);
+        gameScene.updateDrone(physics.pos, physics.quat, inp.t, physics.crashIntensity, inp.armed, dt, physics.vel);
         if (audioEngine) audioEngine.updateMotor(inp.t, inp.armed);
-        levelManager.checkWinCondition(physics.pos, dt, physics.vel);
+        levelManager.checkWinCondition(physics.pos, dt, physics.vel, physics.quat);
 
         domCache.statThr.innerText = `THR: ${Math.round(inp.t*100)}%`;
         domCache.statAlt.innerText = `ALT: ${physics.pos.y.toFixed(1)}m`;
