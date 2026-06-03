@@ -97,6 +97,13 @@ export class LevelManager {
         document.getElementById('level-title').innerText = `第 ${levelIndex} 關：${lvl.name}`;
         document.getElementById('instruction').innerText = lvl.desc;
         document.getElementById('progress-fill').style.width = '0%';
+        // 考試專用 HUD 預設隱藏（L8 的 _setupExam 會再開啟）
+        ['exam-status', 'exam-next'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        this._examMarker = null;
+        this._examArrow = null;
 
         const best = this.getBest(levelIndex);
         document.getElementById('stat-best').innerText = best ? `最佳: ${best}s` : '最佳: --';
@@ -354,12 +361,21 @@ export class LevelManager {
         // 矩形 12m × 8m，繞兩圓內圓走完整一圈，符合 CAA「四角點 + 矩形航線」
         const P1 = [ 6, 0,  4], P2 = [ 6, 0, -4], P3 = [-6, 0, -4], P4 = [-6, 0,  4];
         const ALT = 1.5;
+        // 羅盤方位（與 main.js compass 一致：N=0=前/-z, E=90=右/+x, S=180=後/+z, W=270=左/-x）
+        const N = 0, E = 90, S = 180, W = 270;
+        // 對角朝向（機頭朝某角錐）— 由 θ=atan2(dx,-dz) 算出，孩子靠地面箭頭+紅環對齊即可
+        const toP1 = 124, toH_fromP4 = 56, toP4_fromH = 236, toH_fromP1 = 304;
 
-        // Orange cone markers at P1-P4 with labels
+        // Orange cone markers at P1-P4 with labels（放大、標籤上移更好讀）
         [{ pos: P1, label: 'P1' }, { pos: P2, label: 'P2' },
          { pos: P3, label: 'P3' }, { pos: P4, label: 'P4' }].forEach(c => {
-            grp.add(this._makeCone(c.pos));
-            grp.add(this._makeTextLabel(c.label, [c.pos[0], 2.5, c.pos[2]]));
+            const cone = this._makeCone(c.pos);
+            cone.scale.set(1.6, 1.6, 1.6);   // 放大角錐
+            cone.position.y = 0.8;
+            grp.add(cone);
+            const lbl = this._makeTextLabel(c.label, [c.pos[0], 3.0, c.pos[2]]);
+            lbl.scale.set(3, 1.5, 1);         // 放大標籤
+            grp.add(lbl);
         });
 
         // Rectangle path lines: H -> P1 -> P2 -> P3 -> P4 -> H
@@ -372,65 +388,150 @@ export class LevelManager {
             color: 0xff8800, transparent: true, opacity: 0.5
         })));
 
-        // 20-step exam sequence
+        // 20-step exam sequence（heading = 機頭該朝的羅盤角度；null = 不檢查朝向，如降落）
+        // 國小白話標籤：箭頭 emoji + 方位詞，搭配地面綠箭頭指示
         this._examSteps = [
-            // Phase 1: 定點起降與四面停懸
-            { type: 'takeoff',  pos: [0, ALT, 0], label: '從 H 起飛至 1.5m 停懸' },
-            { type: 'hover_at', pos: [0, ALT, 0], label: '順時針轉 90° 停懸（面向右）' },
-            { type: 'hover_at', pos: [0, ALT, 0], label: '順時針轉 90° 停懸（面向後）' },
-            { type: 'hover_at', pos: [0, ALT, 0], label: '順時針轉 90° 停懸（面向左）' },
-            { type: 'hover_at', pos: [0, ALT, 0], label: '順時針轉 90° 停懸（面向前）' },
-            { type: 'land',     pos: [0, 0, 0],   label: '降落於 H' },
-            // Phase 2: 矩形航線（順時針）
-            { type: 'takeoff',  pos: [0, ALT, 0],         label: '從 H 起飛至 1.5m' },
-            { type: 'hover_at', pos: [0, ALT, 0],         label: '逆時針轉 90°（面向 P1）' },
-            { type: 'hover_at', pos: [P1[0], ALT, P1[2]], label: '飛往 P1 停懸，順時針轉 90°' },
-            { type: 'hover_at', pos: [P2[0], ALT, P2[2]], label: '飛往 P2 停懸，順時針轉 90°' },
-            { type: 'hover_at', pos: [P3[0], ALT, P3[2]], label: '飛往 P3 停懸，順時針轉 90°' },
-            { type: 'hover_at', pos: [P4[0], ALT, P4[2]], label: '飛往 P4 停懸，順時針轉 90°' },
-            { type: 'hover_at', pos: [0, ALT, 0],         label: '飛回 H 停懸' },
+            // Phase 1: 定點起降與四面停懸（這關核心：原地轉四個方向）
+            { type: 'takeoff',  pos: [0, ALT, 0], heading: N, label: '🛫 從 H 點起飛，升到約 1.5 公尺，機頭朝前 ⬆️' },
+            { type: 'hover_at', pos: [0, ALT, 0], heading: E, label: '↻ 原地右轉，機頭朝「右」➡️，停穩' },
+            { type: 'hover_at', pos: [0, ALT, 0], heading: S, label: '↻ 再右轉，機頭朝「後」⬇️（朝自己），停穩' },
+            { type: 'hover_at', pos: [0, ALT, 0], heading: W, label: '↻ 再右轉，機頭朝「左」⬅️，停穩' },
+            { type: 'hover_at', pos: [0, ALT, 0], heading: N, label: '↻ 轉回機頭朝「前」⬆️，停穩' },
+            { type: 'land',     pos: [0, 0, 0],   heading: null, label: '🛬 降落回 H 點' },
+            // Phase 2: 矩形航線（順時針）— 機頭朝你要飛去的方向
+            { type: 'takeoff',  pos: [0, ALT, 0],         heading: N,         label: '🛫 再次起飛到 1.5 公尺，準備走矩形' },
+            { type: 'hover_at', pos: [0, ALT, 0],         heading: toP1,      label: '機頭轉向 P1（對準綠箭頭）' },
+            { type: 'hover_at', pos: [P1[0], ALT, P1[2]], heading: N,         label: '➡️ 飛到 P1 停穩，機頭轉向 P2' },
+            { type: 'hover_at', pos: [P2[0], ALT, P2[2]], heading: W,         label: '➡️ 飛到 P2 停穩，機頭轉向 P3' },
+            { type: 'hover_at', pos: [P3[0], ALT, P3[2]], heading: S,         label: '➡️ 飛到 P3 停穩，機頭轉向 P4' },
+            { type: 'hover_at', pos: [P4[0], ALT, P4[2]], heading: toH_fromP4, label: '➡️ 飛到 P4 停穩，機頭轉回 H' },
+            { type: 'hover_at', pos: [0, ALT, 0],         heading: N,         label: '飛回 H 停穩，機頭朝前 ⬆️' },
             // Phase 2b: 矩形航線（逆時針）
-            { type: 'hover_at', pos: [0, ALT, 0],         label: '轉 180°（面向 P4）' },
-            { type: 'hover_at', pos: [P4[0], ALT, P4[2]], label: '飛往 P4 停懸，逆時針轉 90°' },
-            { type: 'hover_at', pos: [P3[0], ALT, P3[2]], label: '飛往 P3 停懸，逆時針轉 90°' },
-            { type: 'hover_at', pos: [P2[0], ALT, P2[2]], label: '飛往 P2 停懸，逆時針轉 90°' },
-            { type: 'hover_at', pos: [P1[0], ALT, P1[2]], label: '飛往 P1 停懸，逆時針轉 90°' },
-            { type: 'hover_at', pos: [0, ALT, 0],         label: '飛回 H，逆時針轉 90°（面向前）' },
-            { type: 'land',     pos: [0, 0, 0],           label: '降落於 H' },
+            { type: 'hover_at', pos: [0, ALT, 0],         heading: toP4_fromH, label: '機頭轉向 P4（換反方向繞，對準綠箭頭）' },
+            { type: 'hover_at', pos: [P4[0], ALT, P4[2]], heading: N,         label: '⬅️ 飛到 P4 停穩，機頭轉向 P3' },
+            { type: 'hover_at', pos: [P3[0], ALT, P3[2]], heading: E,         label: '⬅️ 飛到 P3 停穩，機頭轉向 P2' },
+            { type: 'hover_at', pos: [P2[0], ALT, P2[2]], heading: S,         label: '⬅️ 飛到 P2 停穩，機頭轉向 P1' },
+            { type: 'hover_at', pos: [P1[0], ALT, P1[2]], heading: toH_fromP1, label: '⬅️ 飛到 P1 停穩，機頭轉回 H' },
+            { type: 'hover_at', pos: [0, ALT, 0],         heading: N,         label: '飛回 H 停穩，機頭朝前 ⬆️' },
+            { type: 'land',     pos: [0, 0, 0],           heading: null,      label: '🛬 降落回 H 點，完成！🎉' },
         ];
         this._examStepIndex = 0;
         this._examHoverTimer = 0;
 
         // 當前 exam step 的虛擬目標環（紅色薄圓環，每幀跟著當前 step.pos + lookAt(drone)）
         this._examMarker = this._makeWpSphere([0, ALT, 0], 0xff3333);
-        this._examMarker.scale.setScalar(1.1); // 稍微放大一點更醒目
+        this._examMarker.scale.setScalar(1.3); // 放大更醒目
         grp.add(this._examMarker);
 
-        document.getElementById('instruction').innerText =
-            `步驟 1/${this._examSteps.length}: ${this._examSteps[0].label}`;
+        // 機頭朝向地面箭頭（指示這一步機頭該朝哪；達標變綠）
+        this._examArrow = this._makeHeadingArrow();
+        grp.add(this._examArrow);
+
+        // 顯示考試專用 HUD（倒數 + 下一步預告）
+        this._setExamHud(0);
     }
 
-    _checkExam(dronePos, dt, pFill, droneVel) {
+    // 地面方向箭頭（group 內箭頭朝 -z = 機頭預設方向；rotation.y = -heading 對應 compass）
+    _makeHeadingArrow() {
+        const g = new THREE.Group();
+        const mat = new THREE.MeshStandardMaterial({
+            color: 0xffcc00, emissive: 0xffaa00, emissiveIntensity: 0.6,
+            transparent: true, opacity: 0.9
+        });
+        const head = new THREE.Mesh(new THREE.ConeGeometry(0.45, 1.1, 4), mat);
+        head.rotation.x = -Math.PI / 2;   // 圓錐 +y → 指向 -z
+        head.position.z = -1.9;
+        g.add(head);
+        const shaft = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.05, 1.4), mat);
+        shaft.position.z = -0.9;
+        g.add(shaft);
+        g.userData.mat = mat;
+        g.position.y = 0.12;
+        return g;
+    }
+
+    // 考試 HUD：步驟說明 + 下一步預告（exam-next）
+    _setExamHud(idx) {
+        const steps = this._examSteps;
+        document.getElementById('instruction').innerText =
+            `步驟 ${idx + 1}/${steps.length}：${steps[idx].label}`;
+        const nextEl = document.getElementById('exam-next');
+        const statEl = document.getElementById('exam-status');
+        if (nextEl) {
+            const nx = steps[idx + 1];
+            nextEl.style.display = 'block';
+            nextEl.innerText = nx ? `接下來：${nx.label}` : '接下來：完成考試！';
+        }
+        if (statEl) { statEl.style.display = 'block'; statEl.innerText = ''; }
+    }
+
+    _yawDegFromQuat(quat) {
+        if (!quat) return null;
+        this._euler = this._euler || new THREE.Euler();
+        this._euler.setFromQuaternion(quat, 'YXZ');
+        let y = -THREE.MathUtils.radToDeg(this._euler.y);
+        return ((y % 360) + 360) % 360;
+    }
+
+    _checkExam(dronePos, dt, pFill, droneVel, droneYaw) {
+        const HOLD = 3;            // 停懸需穩定秒數
+        const HEADING_TOL = 35;    // 機頭朝向容許誤差（度）— 對國小放寬
         const step = this._examSteps[this._examStepIndex];
+        const statEl = document.getElementById('exam-status');
         if (!step) return;
         const dx = dronePos.x - step.pos[0];
         const dz = dronePos.z - step.pos[2];
         const hDist = Math.sqrt(dx * dx + dz * dz);
 
+        // 機頭朝向是否達標
+        let headingOK = true, headingDiff = 0;
+        if (step.heading != null && droneYaw != null) {
+            headingDiff = Math.abs(((droneYaw - step.heading + 540) % 360) - 180);
+            headingOK = headingDiff < HEADING_TOL;
+        }
+
         if (step.type === 'land') {
-            // Require low speed to prevent crash-landing from passing
             const speed = droneVel ? droneVel.length() : 0;
-            if (dronePos.y < 0.3 && hDist < 2 && speed < 1.5) this._advanceExamStep();
+            const ok = dronePos.y < 0.3 && hDist < 2 && speed < 1.5;
+            if (statEl) statEl.innerText = ok ? '✅ 降落成功！' : '🛬 慢慢降到 H 點上…';
+            if (ok) this._advanceExamStep();
         } else {
             const vDist = Math.abs(dronePos.y - step.pos[1]);
-            if (hDist < 2 && vDist < 1) {
+            const inZone = hDist < 2 && vDist < 1;
+            if (inZone && headingOK) {
                 this._examHoverTimer += dt;
-                if (this._examHoverTimer >= 3) this._advanceExamStep();
+                const left = Math.max(0, HOLD - this._examHoverTimer);
+                if (statEl) statEl.innerText = `✅ 停穩中… 再 ${left.toFixed(1)} 秒`;
+                if (this._examHoverTimer >= HOLD) this._advanceExamStep();
             } else {
                 this._examHoverTimer = Math.max(0, this._examHoverTimer - dt * 0.5);
+                if (statEl) {
+                    if (!inZone) statEl.innerText = '➡️ 先飛到紅色圓環裡';
+                    else statEl.innerText = '↻ 位置對了！再把機頭轉到綠箭頭方向';
+                }
             }
         }
+        // 目標環 / 箭頭 顏色回饋
+        this._examFeedbackColor(hDist < 2 && Math.abs(dronePos.y - step.pos[1]) < 1, headingOK, step);
         pFill.style.width = (this._examStepIndex / this._examSteps.length * 100) + '%';
+    }
+
+    // 圓環：在區內變黃、達標(含朝向)變綠、未到位紅；箭頭：朝向對變綠
+    _examFeedbackColor(inZone, headingOK, step) {
+        const needHeading = step.heading != null;
+        const done = inZone && (!needHeading || headingOK);
+        if (this._examMarker) {
+            const c = done ? 0x00ff66 : (inZone ? 0xffcc00 : 0xff3333);
+            this._examMarker.material.color.setHex(c);
+            this._examMarker.material.emissive.setHex(c);
+        }
+        if (this._examArrow && this._examArrow.userData.mat) {
+            const am = this._examArrow.userData.mat;
+            const ac = headingOK ? 0x00ff66 : 0xffcc00;
+            am.color.setHex(ac);
+            am.emissive.setHex(ac);
+            this._examArrow.visible = needHeading;
+        }
     }
 
     _advanceExamStep() {
@@ -439,13 +540,11 @@ export class LevelManager {
         if (this._examStepIndex >= this._examSteps.length) {
             this._complete();
         } else {
-            const step = this._examSteps[this._examStepIndex];
-            document.getElementById('instruction').innerText =
-                `步驟 ${this._examStepIndex + 1}/${this._examSteps.length}: ${step.label}`;
+            this._setExamHud(this._examStepIndex);
         }
     }
 
-    checkWinCondition(dronePos, dt, droneVel) {
+    checkWinCondition(dronePos, dt, droneVel, droneQuat) {
         if (this.isComplete) return true;
         this.elapsed += dt;
         document.getElementById('stat-time').innerText = this.elapsed.toFixed(1) + 's';
@@ -546,6 +645,7 @@ export class LevelManager {
         } else if (L === 8) {
             // Guide line + 虛擬目標環跟著當前 exam step 走
             const step = this._examSteps[this._examStepIndex];
+            const droneYaw = this._yawDegFromQuat(droneQuat);
             if (step) {
                 const target = this._reusableTarget.set(step.pos[0], step.pos[1], step.pos[2]);
                 this.activeTarget = target;
@@ -556,8 +656,18 @@ export class LevelManager {
                     this._examMarker.position.set(step.pos[0], markerY + bobY, step.pos[2]);
                     this._examMarker.lookAt(dronePos);
                 }
+                // 機頭方向箭頭：擺在目標點地面、轉到該步要求的 compass 朝向
+                if (this._examArrow) {
+                    if (step.heading != null) {
+                        this._examArrow.visible = true;
+                        this._examArrow.position.set(step.pos[0], 0.12, step.pos[2]);
+                        this._examArrow.rotation.y = -step.heading * Math.PI / 180;
+                    } else {
+                        this._examArrow.visible = false;
+                    }
+                }
             }
-            this._checkExam(dronePos, dt, pFill, droneVel);
+            this._checkExam(dronePos, dt, pFill, droneVel, droneYaw);
         }
     }
 

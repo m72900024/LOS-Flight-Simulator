@@ -264,11 +264,14 @@
                 <div id="stat-input" style="font-size:11px;color:#aaa;">⌨️ 鍵盤</div>
                 <div id="stat-armed" style="font-size:12px;color:#ff3333;">DISARMED</div>
                 <div id="stat-view" style="font-size:12px;color:#ff4444;font-weight:bold;display:none;margin-top:2px;text-shadow:0 0 6px rgba(255,68,68,0.6);">🔴 FPV 訓練視角</div>
+                <div id="stat-cam" style="font-size:11px;color:#88ccff;display:none;margin-top:2px;">🎥 站位：標準</div>
             </div>
             <div id="center-info">
                 <div id="level-title">LEVEL 1</div>
                 <div id="instruction">載入中...</div>
                 <div id="progress-bar-container"><div id="progress-fill"></div></div>
+                <div id="exam-status" style="display:none;font-size:14px;font-weight:bold;color:#ffee66;margin-top:5px;text-shadow:0 0 6px rgba(0,0,0,0.6);"></div>
+                <div id="exam-next" style="display:none;font-size:11px;color:#88ccff;margin-top:2px;"></div>
             </div>
             <div style="text-align:right;">
                 <div id="stat-time">0.0s</div>
@@ -276,7 +279,7 @@
                 <div id="stat-alt" style="font-size:14px;color:#aaa;">ALT: 0.0m</div>
                 <div id="stat-dist" style="font-size:14px;color:#00ffcc;">距離: --</div>
                 <div id="stat-heading" style="font-size:14px;color:#ccccff;">方向: --</div>
-                <div style="font-size:11px;color:#666;margin-top:4px;">ESC 返回選關 ｜ C 切視角</div>
+                <div style="font-size:11px;color:#666;margin-top:4px;">ESC 返回選關 ｜ C 切視角 ｜ O 切站位</div>
             </div>
         </div>
     </div>
@@ -535,7 +538,8 @@
                     <b>W/S</b> 油門升降 &nbsp; <b>A/D</b> 轉向 &nbsp;
                     <b>↑↓</b> 俯仰 &nbsp; <b>←→</b> 橫滾<br>
                     <b>Space</b> 解鎖 &nbsp; <b>1/2/3</b> 切模式 &nbsp;
-                    <b>R</b> 重置 &nbsp; <b>ESC</b> 返回
+                    <b>R</b> 重置 &nbsp; <b>ESC</b> 返回<br>
+                    <b>C</b> 切視角 (LOS/FPV) &nbsp; <b>O</b> 切站位 (鏡頭構圖)
                 </div>
                 <button class="start-btn" style="margin-top:10px;padding:8px 30px;font-size:14px;background:linear-gradient(to right,#44aa44,#88ff88);"
                     onclick="window.startKeyboard()">⌨️ 鍵盤模式</button>

@@ -11,6 +11,19 @@ export class GameScene {
         this.cameraTarget = new THREE.Vector3(0, 1, 0);
         this.viewMode = 'LOS';   // 'LOS' = 第三人稱（CAA 術科訓練主軸） / 'FPV' = 第一人稱（姿態理解輔助）
 
+        // LOS 觀察者站位預設（守 LOS 真實性：飛手定點，只換站位與視角廣度，不跟拍）
+        this._povPresets = [
+            { label: '標準',   x: 0,  y: 2.5, z: 10, fov: 60 },
+            { label: '低角度', x: 0,  y: 0.8, z: 9,  fov: 65 },  // 襯天空，氣勢
+            { label: '裁判席', x: -7, y: 3,   z: 8,  fov: 50 },  // 斜角＋望遠壓縮
+            { label: '廣角全場', x: 0, y: 4,  z: 14, fov: 75 },
+        ];
+        this._povIndex = 0;
+        // 構圖用暫存向量（避免每幀 new）
+        this._leadVec = new THREE.Vector3();
+        this._tmpTarget = new THREE.Vector3();
+        this._zeroVec = new THREE.Vector3();
+
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3));
@@ -64,6 +77,16 @@ export class GameScene {
     toggleViewMode() {
         this.setViewMode(this.viewMode === 'LOS' ? 'FPV' : 'LOS');
         return this.viewMode;
+    }
+
+    // 循環切換 LOS 觀察者站位，回傳當前站位名稱（給 HUD 顯示）
+    cyclePov() {
+        this._povIndex = (this._povIndex + 1) % this._povPresets.length;
+        return this._povPresets[this._povIndex].label;
+    }
+
+    get currentPovLabel() {
+        return this._povPresets[this._povIndex].label;
     }
 
     setSkyColors({ top, mid, horizon }) {
@@ -672,7 +695,7 @@ export class GameScene {
         this._wind = windVec;
     }
 
-    updateDrone(pos, quat, throttle, crashIntensity = 0, armed = false, dt = 1/60) {
+    updateDrone(pos, quat, throttle, crashIntensity = 0, armed = false, dt = 1/60, vel = null) {
         this.droneGroup.position.copy(pos);
         this.droneGroup.quaternion.copy(quat);
 
@@ -738,8 +761,12 @@ export class GameScene {
             }
         }
 
+        const v = vel || this._zeroVec;
+
         if (this.viewMode === 'FPV') {
             // 第一人稱：camera 跟著 drone 中心與姿態，模擬機上鏡頭視角（訓練用，非競速 FPV 仰角）
+            // 由 LOS 切回時 fov 可能被動態調過，鎖回固定值保持 FPV 視角一致
+            if (this.camera.fov !== 60) { this.camera.fov = 60; this.camera.updateProjectionMatrix(); }
             this.camera.position.copy(pos);
             this.camera.quaternion.copy(quat);
 
@@ -749,10 +776,15 @@ export class GameScene {
                 this.camera.position.z += (Math.random() - 0.5) * crashIntensity * 0.3;
             }
         } else {
-            // LOS 第三人稱鏡頭
-            this.cameraTarget.lerp(pos, 1 - Math.pow(1 - 0.08, dt * 60));
-            let camX = 0, camY = 2.5, camZ = 10;
+            // LOS 第三人稱鏡頭（定點觀察者 = 守 CAA 術科真實性）
+            const p = this._povPresets[this._povIndex];
 
+            // 引導空間：lookAt 點朝速度方向略前移，飛機自然落在前進反向的三分構圖、前方留白
+            const k = 1 - Math.pow(1 - 0.08, dt * 60);
+            this._tmpTarget.copy(pos).add(this._leadVec.copy(v).multiplyScalar(0.35));
+            this.cameraTarget.lerp(this._tmpTarget, k);
+
+            let camX = p.x, camY = p.y, camZ = p.z;
             if (crashIntensity > 0.01) {
                 camX += (Math.random() - 0.5) * crashIntensity * 0.3;
                 camY += (Math.random() - 0.5) * crashIntensity * 0.3;
@@ -761,6 +793,11 @@ export class GameScene {
 
             this.camera.position.set(camX, camY, camZ);
             this.camera.lookAt(this.cameraTarget);
+
+            // 動態 FOV：速度越快視角越開（相機不動，只變廣度 → 速度感而不破壞 LOS）
+            const targetFov = p.fov + Math.min(v.length() * 1.4, 16);
+            this.camera.fov += (targetFov - this.camera.fov) * (1 - Math.pow(1 - 0.1, dt * 60));
+            this.camera.updateProjectionMatrix();
         }
 
         const overlay = document.getElementById('crash-overlay');
