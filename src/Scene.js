@@ -1,4 +1,4 @@
-import { CONFIG } from './Config.js?v=20260611-fixpack';
+import { CONFIG } from './Config.js?v=20260611-uifix';
 
 export class GameScene {
     constructor() {

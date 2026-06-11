@@ -1,4 +1,4 @@
-import { FLIGHT_MODES } from './Config.js?v=20260611-fixpack';
+import { FLIGHT_MODES } from './Config.js?v=20260611-uifix';
 
 /**
  * Dual virtual joystick system for mobile touch controls.

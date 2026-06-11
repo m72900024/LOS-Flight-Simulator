@@ -1,9 +1,9 @@
-import { InputController } from './Input.js?v=20260611-fixpack';
-import { PhysicsEngine } from './Physics.js?v=20260611-fixpack';
-import { GameScene } from './Scene.js?v=20260611-fixpack';
-import { LevelManager } from './LevelManager.js?v=20260611-fixpack';
-import { CONFIG, FLIGHT_MODES, DIFFICULTY_PRESETS } from './Config.js?v=20260611-fixpack';
-import { touchInput } from './TouchInput.js?v=20260611-fixpack';
+import { InputController } from './Input.js?v=20260611-uifix';
+import { PhysicsEngine } from './Physics.js?v=20260611-uifix';
+import { GameScene } from './Scene.js?v=20260611-uifix';
+import { LevelManager } from './LevelManager.js?v=20260611-uifix';
+import { CONFIG, FLIGHT_MODES, DIFFICULTY_PRESETS } from './Config.js?v=20260611-uifix';
+import { touchInput } from './TouchInput.js?v=20260611-uifix';
 
 function applyDifficulty(d) {
     const p = DIFFICULTY_PRESETS[d] || DIFFICULTY_PRESETS.beginner;
@@ -622,7 +622,8 @@ function startGame() {
         statInput: document.getElementById('stat-input'),
         statDist: document.getElementById('stat-dist'),
         statHeading: document.getElementById('stat-heading'),
-        levelTitle: document.getElementById('level-title')
+        levelTitle: document.getElementById('level-title'),
+        altWarning: document.getElementById('alt-warning')
     };
     
     if (input.useTouch) {
@@ -855,6 +856,9 @@ function showPhysPanel(show) {
     if (!show) { panel.classList.remove('open'); toggle.classList.remove('active'); }
     const radar = document.getElementById('radar-box');
     if (radar) radar.style.display = show ? 'block' : 'none';
+    // 遊戲中隱藏左上「場景配色」面板（會蓋住 HUD 的 MODE/ARMED 列），回選單再顯示
+    const tuner = document.getElementById('color-tuner');
+    if (tuner) tuner.style.display = show ? 'none' : '';
 }
 
 // === 2D 雷達 ===
@@ -1003,6 +1007,17 @@ function animate() {
         if (physics.pos.y > CONFIG.maxHeight*0.8) { domCache.statAlt.style.color='#ff3333'; domCache.statAlt.innerText = `ALT: ${physics.pos.y.toFixed(1)}m ⚠️`; }
         else if (physics.pos.y > CONFIG.maxHeight*0.5) domCache.statAlt.style.color='#ffaa00';
         else domCache.statAlt.style.color='#aaa';
+
+        // 太高提示：所有關卡目標高度都 ≤ 3m，超過 8m = 學生迷航（純藍天無參照物），中央閃爍提醒
+        if (domCache.altWarning) {
+            if (physics.pos.y > 8) {
+                const flash2 = Math.floor(Date.now() / 350) % 2 === 0;
+                domCache.altWarning.style.display = 'block';
+                domCache.altWarning.style.opacity = flash2 ? '1' : '0.35';
+            } else {
+                domCache.altWarning.style.display = 'none';
+            }
+        }
 
         // Distance to active waypoint
         if (levelManager.activeTarget) {

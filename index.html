@@ -69,7 +69,7 @@
             box-shadow:0 8px 28px rgba(0,255,204,0.30);
             background:linear-gradient(145deg, #0f2a1e, #0b1d14);
         }
-        .level-card.locked { opacity:0.38; cursor:not-allowed; filter:saturate(0.2); }
+        .level-card.locked { opacity:0.6; cursor:not-allowed; filter:saturate(0.45); }
         .level-card.completed .lc-banner { display:flex; }
 
         /* 彩色頂部橫條（每關不同色） */
@@ -130,7 +130,8 @@
 
         /* 物理參數面板 */
         #phys-toggle {
-            position:absolute; top:15px; right:15px; z-index:3000;
+            /* top 避開右上 HUD（時間/最佳/ALT/距離/方向）與觸控 ARM 鍵（同樣在 top:15px right:15px） */
+            position:absolute; top:180px; right:15px; z-index:3000;
             width:38px; height:38px; border-radius:50%;
             background:rgba(0,0,0,0.6); border:1.5px solid #00ffcc44;
             color:#00ffcc; font-size:18px; cursor:pointer; display:none;
@@ -216,7 +217,7 @@
         #hud-top { padding:15px 20px; color:#fff; text-shadow:1px 1px 2px black; font-size:16px; font-weight:bold; background:linear-gradient(to bottom,rgba(0,0,0,0.6),transparent); display:flex; justify-content:space-between; }
         #center-info { text-align:center; }
         #level-title { color:#00ffcc; font-size:24px; letter-spacing:2px; }
-        #instruction { color:#ffff00; font-size:14px; margin-top:3px; }
+        #instruction { color:#ffff00; font-size:17px; margin-top:3px; }
         #progress-bar-container { width:280px; height:8px; background:#333; margin:8px auto; border-radius:5px; overflow:hidden; border:1px solid #555; }
         #progress-fill { height:100%; width:0%; background:linear-gradient(to right,#00ff00,#00ffcc); transition:width 0.1s; }
 
@@ -271,8 +272,9 @@
                 <div id="level-title">LEVEL 1</div>
                 <div id="instruction">載入中...</div>
                 <div id="progress-bar-container"><div id="progress-fill"></div></div>
-                <div id="exam-status" style="display:none;font-size:14px;font-weight:bold;color:#ffee66;margin-top:5px;text-shadow:0 0 6px rgba(0,0,0,0.6);"></div>
-                <div id="exam-next" style="display:none;font-size:11px;color:#88ccff;margin-top:2px;"></div>
+                <div id="exam-status" style="display:none;font-size:16px;font-weight:bold;color:#ffee66;margin-top:5px;text-shadow:0 0 6px rgba(0,0,0,0.6);"></div>
+                <div id="exam-next" style="display:none;font-size:13px;color:#88ccff;margin-top:2px;"></div>
+                <div id="alt-warning" style="display:none;font-size:18px;font-weight:bold;color:#ff5544;margin-top:6px;text-shadow:0 0 8px rgba(0,0,0,0.8);">⬇️ 太高了！輕按 S 下降</div>
             </div>
             <div style="text-align:right;">
                 <div id="stat-time">0.0s</div>
@@ -381,6 +383,15 @@
         <div class="setup-box">
             <h2 style="color:#00ffcc;margin-top:0;margin-bottom:5px;">🚁 飛行前檢查</h2>
             <div id="status-msg" style="color:#ffaa00;font-size:12px;margin-bottom:10px;">請連接搖桿...</div>
+
+            <!-- 快速開始列：主 CTA 放摺線上，不用捲動就能開始 -->
+            <div style="display:flex;gap:10px;justify-content:center;margin-bottom:12px;">
+                <button class="start-btn" style="margin-top:0;padding:10px 24px;font-size:15px;background:linear-gradient(to right,#44aa44,#88ff88);"
+                    onclick="window.startKeyboard()">⌨️ 鍵盤開始</button>
+                <button class="start-btn" style="margin-top:0;padding:10px 24px;font-size:15px;background:linear-gradient(to right,#4444aa,#8888ff);"
+                    onclick="window.startTouch()">📱 觸控開始</button>
+            </div>
+            <div style="font-size:11px;color:#667;margin-bottom:12px;">用搖桿？往下捲完成「手把配置」再開始 ⬇️</div>
 
             <div style="background:#1a1a2a;padding:8px;border-radius:6px;margin-bottom:10px;border:1px solid #336;">
                 <div style="font-size:12px;color:#88aaff;margin-bottom:6px;">🎯 飛行難度（角速度 / 最大傾角 / 油門曲線）</div>
@@ -571,8 +582,8 @@
             if (tb) tb.style.display = 'none';
         }
     </script>
-    <script type="module" src="./src/main.js?v=20260611-fixpack"></script>
-    <div id="build-tag" style="position:fixed;bottom:4px;right:6px;font-size:10px;color:#456;font-family:monospace;pointer-events:none;z-index:9999;">build: 20260611-fixpack</div>
+    <script type="module" src="./src/main.js?v=20260611-uifix"></script>
+    <div id="build-tag" style="position:fixed;bottom:4px;right:6px;font-size:10px;color:#456;font-family:monospace;pointer-events:none;z-index:9999;">build: 20260611-uifix</div>
 
     <div id="radar-box" style="position:fixed;bottom:18px;right:14px;width:160px;height:160px;background:rgba(8,16,24,0.85);border:1px solid #2a4a5a;border-radius:8px;padding:6px;font-family:system-ui,sans-serif;z-index:9997;display:none;backdrop-filter:blur(4px);">
         <div style="font-size:10px;color:#88aaff;margin-bottom:3px;display:flex;justify-content:space-between;">

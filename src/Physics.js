@@ -1,4 +1,4 @@
-import { CONFIG, FLIGHT_MODES } from './Config.js?v=20260611-fixpack';
+import { CONFIG, FLIGHT_MODES } from './Config.js?v=20260611-uifix';
 
 export class PhysicsEngine {
     constructor() {
@@ -108,14 +108,17 @@ export class PhysicsEngine {
                 thrustMag = hoverThrust + kP * (this.altHoldTarget - this.pos.y) - kD * this.vel.y;
             } else if (input.t > 0.6) {
                 this.altHoldTarget = null;
-                // Climb: hover thrust + extra proportional to stick above deadzone
+                // Climb: 速度目標式（DJI 風格，桿量 = 目標爬升率，推滿 = 3 m/s）
+                // 先前是開環推力疊加（hover + 0.5×thrustPower），按住會無上限加速到 ~20 m/s，國小生必衝過頭
                 const climbInput = (input.t - 0.6) / 0.4; // 0..1
-                thrustMag = hoverThrust + climbInput * CONFIG.thrustPower * 0.5;
+                const targetVy = climbInput * 3.0;
+                thrustMag = hoverThrust + (targetVy - this.vel.y) * 4.0 * CONFIG.mass;
             } else {
                 this.altHoldTarget = null;
-                // Descend: hover thrust - reduction proportional to stick below deadzone
+                // Descend: 速度目標式（拉滿 = -2 m/s 穩定下降）
                 const descendInput = (0.4 - input.t) / 0.4; // 0..1
-                thrustMag = hoverThrust * (1 - descendInput * 0.8);
+                const targetVy = -descendInput * 2.0;
+                thrustMag = Math.max(0, hoverThrust + (targetVy - this.vel.y) * 4.0 * CONFIG.mass);
             }
         }
 

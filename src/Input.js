@@ -1,5 +1,5 @@
-import { CONFIG, FLIGHT_MODES } from './Config.js?v=20260611-fixpack';
-import { touchInput } from './TouchInput.js?v=20260611-fixpack';
+import { CONFIG, FLIGHT_MODES } from './Config.js?v=20260611-uifix';
+import { touchInput } from './TouchInput.js?v=20260611-uifix';
 
 export class InputController {
     constructor() {
@@ -113,6 +113,7 @@ export class InputController {
         const k = this.keys;
 
         // Alt Hold 模式：固定油門值（鍵盤無法精確控制連續油門）
+        // 定高爬升是速度目標式（Physics.js）：W=0.8 → 穩定 +1.5 m/s、S=0.2 → 穩定 -1 m/s
         if (this.state.flightMode === FLIGHT_MODES.ALT_HOLD) {
             if (k['KeyW']) {
                 this.keyThrottle = 0.8;
