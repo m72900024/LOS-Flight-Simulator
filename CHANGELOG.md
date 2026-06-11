@@ -1,5 +1,22 @@
 # Changelog
 
+## v2.14（2026-06-11）— 全面健檢修正包（fixpack）
+Bug 修正
+- **油門暴衝修復**（Input.js）：rate mode 的 dt 時間戳改為每幀更新並夾上限 0.1s——先前在定高模式久待後切到自穩/手動，油門會在一幀內被推到 0 或 1
+- **幀率相依物理修正**（Physics.js）：超過最大高度的垂直減速、地面摩擦改為 dt-based（`Math.pow(x, dt*60)`），144Hz 螢幕手感與 60Hz 一致
+- **軸位偵測不再寫死 gamepad[0]**（main.js）：`detectAxis` / `autoDetectAll` 改用已連接的 `input.gamepadIndex`，多支手把/藍牙殘留時不會偵測錯支
+- **Cache buster 全模組覆蓋**（src/*.js + index.html）：所有 ES module import 統一帶 `?v=` 版號——先前只有 main.js 有版號，GH Pages 快取期內可能拿到新舊混版模組
+
+效能與功能
+- **行動裝置效能**（Scene.js）：觸控裝置 pixelRatio 上限 3→2、陰影貼圖 4096→2048（教室 iPad 幀率收益）
+- **three.js r128 vendor 進 repo**（`lib/three.min.js`）：不再依賴 cdnjs，教室斷網/CDN 故障也能跑
+- **🗑 清除紀錄按鈕**（關卡選擇頁）：一鍵清除最佳成績與解鎖進度，教室共用裝置換班用
+- **物理面板開啟時同步實際 CONFIG**（main.js）：先前滑桿顯示 HTML 預設值，與難度預設改過的實際參數不符
+
+程式碼清理
+- 移除 Input.js 死碼（`armed === undefined` 預設解鎖分支，永不觸發且與安全設計矛盾）
+- 修正註解錯誤：內八/外八 hold 時間（2 秒→實際 0.5 秒）、航行燈顏色（前紅後藍→實際前綠後紅）
+
 ## v2.13（2026-06-04）— 鏡頭構圖選項 + L8 國小友善化
 鏡頭構圖（Scene.js / main.js / index.html）
 - 新增 **O 鍵循環 4 種 LOS 觀察者站位**：標準 / 低角度 / 裁判席 / 廣角全場（守 LOS 定點原則，不跟拍）

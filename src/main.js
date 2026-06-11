@@ -1,9 +1,9 @@
-import { InputController } from './Input.js';
-import { PhysicsEngine } from './Physics.js';
-import { GameScene } from './Scene.js';
-import { LevelManager } from './LevelManager.js';
-import { CONFIG, FLIGHT_MODES, DIFFICULTY_PRESETS } from './Config.js';
-import { touchInput } from './TouchInput.js';
+import { InputController } from './Input.js?v=20260611-fixpack';
+import { PhysicsEngine } from './Physics.js?v=20260611-fixpack';
+import { GameScene } from './Scene.js?v=20260611-fixpack';
+import { LevelManager } from './LevelManager.js?v=20260611-fixpack';
+import { CONFIG, FLIGHT_MODES, DIFFICULTY_PRESETS } from './Config.js?v=20260611-fixpack';
+import { touchInput } from './TouchInput.js?v=20260611-fixpack';
 
 function applyDifficulty(d) {
     const p = DIFFICULTY_PRESETS[d] || DIFFICULTY_PRESETS.beginner;
@@ -436,6 +436,12 @@ window.addEventListener("gamepadconnected", (e) => {
 });
 
 // --- 軸位自動偵測 ---
+// 用已連接的手把索引（input.gamepadIndex），不寫死 [0]——避免多支手把/藍牙殘留時偵測錯支
+function getActiveGamepad() {
+    const idx = (input.gamepadIndex !== null) ? input.gamepadIndex : 0;
+    return navigator.getGamepads()[idx] || null;
+}
+
 window.detectAxis = function (channel) {
     const btn = document.getElementById("detect-btn-" + channel);
     const label = document.getElementById("axis-label-" + channel);
@@ -443,14 +449,14 @@ window.detectAxis = function (channel) {
     btn.innerText = "搖動搖桿...";
     btn.style.background = "#aa8800";
 
-    const gp = navigator.getGamepads()[0];
+    const gp = getActiveGamepad();
     if (!gp) return;
     const baseline = {};
     gp.axes.forEach((v, i) => { baseline[i] = v; });
 
     let best = { axis: -1, delta: 0 };
     const interval = setInterval(() => {
-        const g = navigator.getGamepads()[0];
+        const g = getActiveGamepad();
         if (!g) return;
         g.axes.forEach((v, i) => {
             const d = Math.abs(v - (baseline[i] || 0));
@@ -485,7 +491,7 @@ window.autoDetectAll = async function() {
     btn.style.background = "#aa8800";
     btn.disabled = true;
 
-    const gp = navigator.getGamepads()[0];
+    const gp = getActiveGamepad();
     if (!gp) {
         btn.innerText = "❌ 未偵測到手把";
         btn.disabled = false;
@@ -498,7 +504,7 @@ window.autoDetectAll = async function() {
 
     // 監聽 3 秒
     const interval = setInterval(() => {
-        const g = navigator.getGamepads()[0];
+        const g = getActiveGamepad();
         if (!g) return;
         g.axes.forEach((v, i) => {
             const d = Math.abs(v - baseline[i]);
@@ -564,6 +570,17 @@ window.autoDetectAll = async function() {
     btn.innerText = "✅ 配置完成！可以開始飛行";
     btn.style.background = "#2a5a2a";
     btn.disabled = false;
+};
+
+// 清除關卡紀錄與解鎖進度（教室共用裝置換班用）
+window.resetProgress = function () {
+    if (!confirm('確定要清除所有關卡紀錄與解鎖進度嗎？\n（教室換班時使用）')) return;
+    try {
+        localStorage.removeItem('flightSimBest');
+        localStorage.removeItem('flightSimUnlocked');
+    } catch (e) {}
+    if (levelManager) levelManager.bestTimes = {};
+    showLevelSelect(); // 重新渲染關卡卡片
 };
 
 window.goBackToSetup = function () {
@@ -800,6 +817,8 @@ function ppSetPreset(name) {
         const open = panel.classList.toggle('open');
         toggle.classList.toggle('active', open);
         panel.style.display = open ? 'flex' : 'none';
+        // 開啟時把滑桿同步到實際 CONFIG（難度預設也會改這批參數，不同步會顯示錯值）
+        if (open) ppRefreshUI(CONFIG);
     });
 
     // 滑桿即時更新

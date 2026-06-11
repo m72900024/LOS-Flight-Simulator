@@ -1,4 +1,4 @@
-import { CONFIG, FLIGHT_MODES } from './Config.js';
+import { CONFIG, FLIGHT_MODES } from './Config.js?v=20260611-fixpack';
 
 export class PhysicsEngine {
     constructor() {
@@ -182,7 +182,9 @@ export class PhysicsEngine {
                 this.rotVel.z += (Math.random() - 0.5) * 5;
             } else {
                 this.vel.y = 0;
-                this.vel.x *= 0.7; this.vel.z *= 0.7;
+                // 地面摩擦（frame-rate independent）
+                const groundFriction = Math.pow(0.7, dt * 60);
+                this.vel.x *= groundFriction; this.vel.z *= groundFriction;
             }
         }
 
@@ -271,7 +273,7 @@ export class PhysicsEngine {
 
         // 高度軟限制（超過最大高度後推力遞減）
         if (this.pos.y > CONFIG.maxHeight) {
-            this.vel.y *= 0.95; // 逐漸減速
+            this.vel.y *= Math.pow(0.95, dt * 60); // 逐漸減速（frame-rate independent）
         }
 
         // 水平邊界軟限制（超過 80m 後逐漸減速回拉）

@@ -1,5 +1,5 @@
-import { CONFIG, FLIGHT_MODES } from './Config.js';
-import { touchInput } from './TouchInput.js';
+import { CONFIG, FLIGHT_MODES } from './Config.js?v=20260611-fixpack';
+import { touchInput } from './TouchInput.js?v=20260611-fixpack';
 
 export class InputController {
     constructor() {
@@ -188,6 +188,11 @@ export class InputController {
 
         // 時間戳（解鎖手勢 hold 進度與 rate mode 油門積分都要用）
         const now_t = performance.now();
+        // dt 每幀更新並夾上限：避免在 position mode（ALT_HOLD）久待後切回 rate mode 時
+        // _lastGamepadTime 過期 → dt 暴增 → 油門一幀內被推到 0 或 1
+        const dt_t = this._lastGamepadTime
+            ? Math.min((now_t - this._lastGamepadTime) / 1000, 0.1) : 1 / 60;
+        this._lastGamepadTime = now_t;
 
         // 油門：依搖桿類型 + 飛行模式選擇 position mode（DJI 風格）或 rate mode（FPV 風格）
         let rawThr = gp.axes[ax.thrust] || 0;
@@ -204,8 +209,6 @@ export class InputController {
             this.state.t = Math.max(0, Math.min(1, 0.5 - rawThr * 0.5));
         } else {
             // rate mode：置中桿 + ACRO/ANGLE/HORIZON — 推上加、推下減、鬆桿油門保持
-            const dt_t = this._lastGamepadTime ? (now_t - this._lastGamepadTime) / 1000 : 1/60;
-            this._lastGamepadTime = now_t;
             if (this.state.t === undefined) this.state.t = 0.5;
             const thrRate = 1.5;
             this.state.t = Math.max(0, Math.min(1, this.state.t - rawThr * thrRate * dt_t));
@@ -217,12 +220,9 @@ export class InputController {
         this.state.y = readAxis(ax.yaw, inv.r, cal.yaw, 'yaw');
 
         // 解鎖：RC 真實遙控器方式
-        // 解鎖：左搖桿推到左下角（油門最低 + 偏航最左）hold 2 秒 → armed
-        // 上鎖：左搖桿推到右下角（油門最低 + 偏航最右）hold 2 秒 → disarmed
+        // 解鎖：內八（左搖桿右下 + 右搖桿左下）hold 0.5 秒 → armed
+        // 上鎖：外八（左搖桿左下 + 右搖桿右下）hold 0.5 秒 → disarmed
         if (ax.arm === -1 || ax.arm === undefined) {
-            // 初始化時預設解鎖
-            if (this.state.armed === undefined) this.state.armed = true;
-
             // 按鈕 0（Xbox A / PS X / 多數手把預設按鈕）瞬間切換解鎖（受 _noArmUntil 冷卻期限制）
             const btn0 = (gp.buttons[0] && gp.buttons[0].pressed) || false;
             const armCooldownExpired = now_t >= (this._noArmUntil || 0);
@@ -240,7 +240,7 @@ export class InputController {
             const pitchRaw = gp.axes[ax.pitch] || 0;
             const rollRaw = gp.axes[ax.roll] || 0;
 
-            // 內八解鎖：左搖桿右下 + 右搖桿左下 hold 2s（門檻放寬到 0.55）
+            // 內八解鎖：左搖桿右下 + 右搖桿左下 hold 0.5s（門檻放寬到 0.55）
             const TH = 0.55;
             const thrDown  = thrRaw > TH;
             const yawRight = yawRaw > TH;
@@ -248,7 +248,7 @@ export class InputController {
             const rollLeft  = rollRaw < -TH;
             const isInnerCross = thrDown && yawRight && pitchDown && rollLeft;
 
-            // 外八上鎖：左搖桿左下 + 右搖桿右下 hold 2s
+            // 外八上鎖：左搖桿左下 + 右搖桿右下 hold 0.5s
             const yawLeft  = yawRaw < -TH;
             const rollRight = rollRaw > TH;
             const isOuterCross = thrDown && yawLeft && pitchDown && rollRight;

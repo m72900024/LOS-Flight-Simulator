@@ -1,4 +1,4 @@
-import { CONFIG } from './Config.js';
+import { CONFIG } from './Config.js?v=20260611-fixpack';
 
 export class GameScene {
     constructor() {
@@ -26,7 +26,9 @@ export class GameScene {
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3));
+        // 行動裝置（教室 iPad）降 pixelRatio 上限，桌機維持 3
+        const isMobile = ('ontouchstart' in window);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 2 : 3));
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -186,7 +188,9 @@ export class GameScene {
         const dir = new THREE.DirectionalLight(0xfff0d8, 1.7);
         dir.position.set(30, 60, 40);
         dir.castShadow = true;
-        dir.shadow.mapSize.set(4096, 4096);
+        // 行動裝置降陰影解析度（4096 在舊 iPad 上吃太兇）
+        const shadowRes = ('ontouchstart' in window) ? 2048 : 4096;
+        dir.shadow.mapSize.set(shadowRes, shadowRes);
         dir.shadow.bias = -0.001;
         const sc = dir.shadow.camera;
         sc.near = 0.5; sc.far = 200; sc.left = -60; sc.right = 60; sc.top = 60; sc.bottom = -60;
@@ -727,7 +731,7 @@ export class GameScene {
             }
         }
 
-        // 航行燈：前臂紅色快閃，後臂藍色常亮
+        // 航行燈：前臂綠色快閃，後臂紅色常亮
         const navT = Date.now();
         this._navLights.forEach(nl => {
             // 前綠閃爍（搶眼），後紅常亮

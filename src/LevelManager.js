@@ -1,4 +1,4 @@
-import { CONFIG } from './Config.js';
+import { CONFIG } from './Config.js?v=20260611-fixpack';
 
 export class LevelManager {
     constructor(scene) {
