@@ -1,5 +1,5 @@
-import { CONFIG, FLIGHT_MODES } from './Config.js?v=20260611-uifix';
-import { touchInput } from './TouchInput.js?v=20260611-uifix';
+import { CONFIG, FLIGHT_MODES } from './Config.js?v=20260613-uiplus';
+import { touchInput } from './TouchInput.js?v=20260613-uiplus';
 
 export class InputController {
     constructor() {

@@ -1,4 +1,4 @@
-import { CONFIG } from './Config.js?v=20260611-uifix';
+import { CONFIG } from './Config.js?v=20260613-uiplus';
 
 export class LevelManager {
     constructor(scene) {
@@ -702,13 +702,16 @@ export class LevelManager {
         const best = this.getBest(this.currentLevel);
         document.getElementById('msg-best').innerText = best ? `最佳: ${best}s` : '';
 
-        document.getElementById('btn-next').onclick = () => {
+        const goLevel = (lv) => {
             document.getElementById('msg-overlay').style.display = 'none';
-            const next = this.currentLevel < 8 ? this.currentLevel + 1 : 1;
-            this.loadLevel(next);
+            this.loadLevel(lv);
             window.dispatchEvent(new Event('reset-drone'));
-            // 進下一關必須重置 arm 狀態（跟 startGame 一樣）
+            // 進新關卡必須重置 arm 狀態（跟 startGame 一樣）
             window.dispatchEvent(new Event('level-changed'));
         };
+        document.getElementById('btn-next').onclick = () =>
+            goLevel(this.currentLevel < 8 ? this.currentLevel + 1 : 1);
+        // 再飛一次：刷最佳成績用，不必繞回選關頁
+        document.getElementById('btn-retry').onclick = () => goLevel(this.currentLevel);
     }
 }

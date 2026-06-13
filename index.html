@@ -128,18 +128,30 @@
         .level-card.exam-card { border-color:#00ffcc; box-shadow:0 0 12px rgba(0,255,204,0.2); }
         .level-card.exam-card:not(.locked):hover { border-color:#00ffcc; box-shadow:0 8px 28px rgba(0,255,204,0.4); }
 
-        /* 物理參數面板 */
-        #phys-toggle {
-            /* top 避開右上 HUD（時間/最佳/ALT/距離/方向）與觸控 ARM 鍵（同樣在 top:15px right:15px） */
-            position:absolute; top:180px; right:15px; z-index:3000;
+        /* 右側浮動圓鈕群（齒輪/靜音/全螢幕）：top 避開右上 HUD 與觸控 ARM 鍵 */
+        #phys-toggle, #mute-toggle, #fs-toggle {
+            position:absolute; right:15px; z-index:3000;
             width:38px; height:38px; border-radius:50%;
             background:rgba(0,0,0,0.6); border:1.5px solid #00ffcc44;
-            color:#00ffcc; font-size:18px; cursor:pointer; display:none;
+            color:#00ffcc; font-size:18px; cursor:pointer;
             align-items:center; justify-content:center;
             transition:all 0.2s; pointer-events:auto;
         }
-        #phys-toggle:hover { background:rgba(0,255,204,0.15); border-color:#00ffcc; }
+        #phys-toggle { top:180px; display:none; }
+        #mute-toggle { top:228px; display:none; }
+        #fs-toggle   { top:276px; display:flex; }
+        #phys-toggle:hover, #mute-toggle:hover, #fs-toggle:hover { background:rgba(0,255,204,0.15); border-color:#00ffcc; }
         #phys-toggle.active { background:rgba(0,255,204,0.2); border-color:#00ffcc; }
+
+        /* 進關按鍵提示浮層 */
+        #key-hint-overlay {
+            position:fixed; top:38%; left:50%; transform:translate(-50%,-50%);
+            background:rgba(0,0,0,0.82); border:1.5px solid #00ffcc66; border-radius:14px;
+            padding:18px 30px; color:#fff; font-size:18px; line-height:2;
+            text-align:center; z-index:2500; display:none; pointer-events:none;
+            transition:opacity 0.6s; text-shadow:0 1px 2px #000;
+        }
+        #key-hint-overlay b { color:#00ffcc; }
 
         #phys-panel {
             position:absolute; top:0; right:-320px; width:300px; height:100%;
@@ -287,6 +299,13 @@
         </div>
     </div>
 
+    <!-- 進關按鍵提示浮層 -->
+    <div id="key-hint-overlay"></div>
+
+    <!-- 右側浮動圓鈕群 -->
+    <button id="mute-toggle" title="靜音切換" onclick="window.toggleMute()">🔊</button>
+    <button id="fs-toggle" title="全螢幕" onclick="window.toggleFullscreen()">⛶</button>
+
     <!-- 物理參數面板 -->
     <button id="phys-toggle" title="難易度調整">⚙️</button>
     <div id="phys-panel">
@@ -360,6 +379,7 @@
         <div id="msg-title">🎉 關卡完成！</div>
         <div id="msg-time">用時: 0s</div>
         <div id="msg-best"></div>
+        <button class="start-btn" id="btn-retry" style="font-size:16px;padding:10px 30px;background:linear-gradient(to right,#888,#bbb);margin-right:10px;">🔁 再飛一次</button>
         <button class="start-btn" id="btn-next" style="font-size:16px;padding:10px 40px;">下一關 →</button>
     </div>
 
@@ -415,6 +435,9 @@
                 </div>
             </div>
 
+            <!-- 搖桿進階設定（預設折疊；手把連接時自動展開）——鍵盤/觸控學生不用看這堆 -->
+            <button id="gp-adv-toggle" onclick="window.toggleGamepadAdv()" style="width:100%;background:#1a1a2a;border:1px solid #336;color:#88aaff;padding:8px;border-radius:6px;font-size:13px;cursor:pointer;margin-bottom:10px;text-align:left;">🎮 搖桿設定（進階）<span id="gp-adv-arrow" style="float:right;">▸</span></button>
+            <div id="gamepad-adv" style="display:none;">
             <div class="monitor-box">
                 <div style="font-size:11px;color:#888;margin-bottom:5px;text-align:left;display:flex;justify-content:space-between;">
                     <span>🔍 訊號監控</span>
@@ -544,6 +567,7 @@
                     </button>
                 </div>
             </div>
+            </div><!-- /gamepad-adv -->
 
             <div class="kb-box">
                 <div style="font-size:13px;color:#88ff88;margin-bottom:8px;">⌨️ 鍵盤控制</div>
@@ -582,8 +606,8 @@
             if (tb) tb.style.display = 'none';
         }
     </script>
-    <script type="module" src="./src/main.js?v=20260611-uifix"></script>
-    <div id="build-tag" style="position:fixed;bottom:4px;right:6px;font-size:10px;color:#456;font-family:monospace;pointer-events:none;z-index:9999;">build: 20260611-uifix</div>
+    <script type="module" src="./src/main.js?v=20260613-uiplus"></script>
+    <div id="build-tag" style="position:fixed;bottom:4px;right:6px;font-size:10px;color:#456;font-family:monospace;pointer-events:none;z-index:9999;">build: 20260613-uiplus</div>
 
     <div id="radar-box" style="position:fixed;bottom:18px;right:14px;width:160px;height:160px;background:rgba(8,16,24,0.85);border:1px solid #2a4a5a;border-radius:8px;padding:6px;font-family:system-ui,sans-serif;z-index:9997;display:none;backdrop-filter:blur(4px);">
         <div style="font-size:10px;color:#88aaff;margin-bottom:3px;display:flex;justify-content:space-between;">

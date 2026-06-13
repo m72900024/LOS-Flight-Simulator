@@ -1,4 +1,4 @@
-import { FLIGHT_MODES } from './Config.js?v=20260611-uifix';
+import { FLIGHT_MODES } from './Config.js?v=20260613-uiplus';
 
 /**
  * Dual virtual joystick system for mobile touch controls.
@@ -57,21 +57,21 @@ class TouchInput {
         this._rightJoy = this._createJoystick(c, 'right', '俯仰/橫滾');
         this._rightThumb = this._rightJoy.querySelector('.touch-thumb');
 
-        // Arm button (top-right)
+        // Arm button (right side, top:112 避開右上 HUD 文字列；底端貼齒輪 top:180)
         this._armBtn = document.createElement('div');
-        this._armBtn.style.cssText = 'position:fixed;top:15px;right:15px;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:#fff;pointer-events:auto;cursor:pointer;z-index:910;border:2px solid;user-select:none;-webkit-user-select:none;';
+        this._armBtn.style.cssText = 'position:fixed;top:112px;right:15px;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:#fff;pointer-events:auto;cursor:pointer;z-index:910;border:2px solid;user-select:none;-webkit-user-select:none;';
         this._updateArmBtn(false);
         c.appendChild(this._armBtn);
 
-        // Mode button (top-left)
+        // Mode button (left side, top:112 避開左上 HUD 文字列)
         this._modeBtn = document.createElement('div');
-        this._modeBtn.style.cssText = 'position:fixed;top:15px;left:15px;width:60px;height:60px;border-radius:50%;background:rgba(0,100,200,0.5);border:2px solid rgba(100,180,255,0.5);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;color:#fff;pointer-events:auto;cursor:pointer;z-index:910;text-align:center;line-height:1.2;user-select:none;-webkit-user-select:none;';
+        this._modeBtn.style.cssText = 'position:fixed;top:112px;left:15px;width:60px;height:60px;border-radius:50%;background:rgba(0,100,200,0.5);border:2px solid rgba(100,180,255,0.5);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;color:#fff;pointer-events:auto;cursor:pointer;z-index:910;text-align:center;line-height:1.2;user-select:none;-webkit-user-select:none;';
         this._modeBtn.innerText = '自穩';
         c.appendChild(this._modeBtn);
 
-        // Reset button (top-center)
+        // Reset button (center, top:112 避開中央關卡標題/任務說明)
         const resetBtn = document.createElement('div');
-        resetBtn.style.cssText = 'position:fixed;top:15px;left:50%;transform:translateX(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;pointer-events:auto;cursor:pointer;z-index:910;user-select:none;-webkit-user-select:none;';
+        resetBtn.style.cssText = 'position:fixed;top:112px;left:50%;transform:translateX(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;pointer-events:auto;cursor:pointer;z-index:910;user-select:none;-webkit-user-select:none;';
         resetBtn.innerText = '↺';
         resetBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();

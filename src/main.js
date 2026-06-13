@@ -1,9 +1,9 @@
-import { InputController } from './Input.js?v=20260611-uifix';
-import { PhysicsEngine } from './Physics.js?v=20260611-uifix';
-import { GameScene } from './Scene.js?v=20260611-uifix';
-import { LevelManager } from './LevelManager.js?v=20260611-uifix';
-import { CONFIG, FLIGHT_MODES, DIFFICULTY_PRESETS } from './Config.js?v=20260611-uifix';
-import { touchInput } from './TouchInput.js?v=20260611-uifix';
+import { InputController } from './Input.js?v=20260613-uiplus';
+import { PhysicsEngine } from './Physics.js?v=20260613-uiplus';
+import { GameScene } from './Scene.js?v=20260613-uiplus';
+import { LevelManager } from './LevelManager.js?v=20260613-uiplus';
+import { CONFIG, FLIGHT_MODES, DIFFICULTY_PRESETS } from './Config.js?v=20260613-uiplus';
+import { touchInput } from './TouchInput.js?v=20260613-uiplus';
 
 function applyDifficulty(d) {
     const p = DIFFICULTY_PRESETS[d] || DIFFICULTY_PRESETS.beginner;
@@ -33,6 +33,36 @@ let appState = 'SETUP';
 let isGamepadInit = false;
 let selectedLevel = 1;
 
+// 靜音狀態（教室多台裝置同時上課防吵），localStorage 持久化
+let isMuted = false;
+try { isMuted = localStorage.getItem('flightSimMuted') === '1'; } catch (e) {}
+
+window.toggleMute = function () {
+    isMuted = !isMuted;
+    try { localStorage.setItem('flightSimMuted', isMuted ? '1' : '0'); } catch (e) {}
+    const btn = document.getElementById('mute-toggle');
+    if (btn) btn.innerText = isMuted ? '🔇' : '🔊';
+    if (isMuted && audioEngine) audioEngine.gain.gain.value = 0;
+};
+
+// 全螢幕切換（iPad Safari 用 webkit 前綴；不支援就藏按鈕）
+window.toggleFullscreen = function () {
+    const el = document.documentElement;
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    } else {
+        const req = el.requestFullscreen || el.webkitRequestFullscreen;
+        if (req) req.call(el);
+    }
+};
+(function initFloatBtns() {
+    const fsBtn = document.getElementById('fs-toggle');
+    const el = document.documentElement;
+    if (fsBtn && !el.requestFullscreen && !el.webkitRequestFullscreen) fsBtn.style.display = 'none';
+    const muteBtn = document.getElementById('mute-toggle');
+    if (muteBtn && isMuted) muteBtn.innerText = '🔇';
+})();
+
 class AudioEngine {
     constructor() {
         this.ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -56,7 +86,7 @@ class AudioEngine {
     }
 
     updateMotor(throttle, armed) {
-        if (!armed || throttle < 0.01) {
+        if (isMuted || !armed || throttle < 0.01) {
             this.gain.gain.value = 0;
             return;
         }
@@ -65,6 +95,7 @@ class AudioEngine {
     }
 
     _playComplete() {
+        if (isMuted) return;
         const now = this.ctx.currentTime;
         const notes = [261.6, 329.6, 392.0]; // C4, E4, G4
         notes.forEach((freq, i) => {
@@ -147,15 +178,16 @@ window.calibrateEndpoint = function (ch, type) {
 };
 
 // --- 關卡選擇 ---
+// 每關獨立 accent 色：視覺辨識 + 進度感（由淺入深的彩虹走向，考試關金色壓軸）
 const LEVEL_META = [
-    { icon:'🛫', stars:1, ac1:'#00ffcc', ac2:'#00cc99' },
-    { icon:'🎯', stars:1, ac1:'#00ffcc', ac2:'#00cc99' },
-    { icon:'↔️',  stars:2, ac1:'#00ffcc', ac2:'#00cc99' },
-    { icon:'↕️',  stars:2, ac1:'#00ffcc', ac2:'#00cc99' },
-    { icon:'🔷', stars:3, ac1:'#00ffcc', ac2:'#00cc99' },
-    { icon:'🚪', stars:3, ac1:'#00ffcc', ac2:'#00cc99' },
-    { icon:'∞',  stars:4, ac1:'#00ffcc', ac2:'#00cc99' },
-    { icon:'🏆', stars:5, ac1:'#00ffcc', ac2:'#00cc99', isExam:true },
+    { icon:'🛫', stars:1, ac1:'#00ffcc', ac2:'#00cc99' },              // L1 青綠
+    { icon:'🎯', stars:1, ac1:'#4da6ff', ac2:'#2d7fd9' },              // L2 天藍
+    { icon:'↔️',  stars:2, ac1:'#b07cff', ac2:'#8a4fd9' },              // L3 紫
+    { icon:'↕️',  stars:2, ac1:'#ff7cc8', ac2:'#d94f9e' },              // L4 粉
+    { icon:'🔷', stars:3, ac1:'#ffaa44', ac2:'#d9842d' },              // L5 橙
+    { icon:'🚪', stars:3, ac1:'#ffe44d', ac2:'#d9bd2d' },              // L6 黃
+    { icon:'∞',  stars:4, ac1:'#ff6b4d', ac2:'#d9442d' },              // L7 紅橙
+    { icon:'🏆', stars:5, ac1:'#ffd700', ac2:'#ff9500', isExam:true }, // L8 金
 ];
 
 function showLevelSelect() {
@@ -645,6 +677,7 @@ function startGame() {
     appState = 'GAME';
     showPhysPanel(true);
     applyPovHud();   // 進場顯示目前 LOS 站位
+    showKeyHint();   // 按鍵提示浮層（4 秒淡出）
     clock.start();
 }
 
@@ -855,10 +888,59 @@ function showPhysPanel(show) {
     toggle.style.display = show ? 'flex' : 'none';
     if (!show) { panel.classList.remove('open'); toggle.classList.remove('active'); }
     const radar = document.getElementById('radar-box');
-    if (radar) radar.style.display = show ? 'block' : 'none';
+    if (radar) {
+        radar.style.display = show ? 'block' : 'none';
+        // 觸控模式：雷達上移避開右下虛擬搖桿（否則整個壓住右搖桿，俯仰/橫滾摸不到）
+        radar.style.bottom = (show && input.useTouch) ? '215px' : '';
+    }
+    // 靜音鈕跟齒輪同進退（聲音只在遊戲中）
+    const muteBtn = document.getElementById('mute-toggle');
+    if (muteBtn) muteBtn.style.display = show ? 'flex' : 'none';
     // 遊戲中隱藏左上「場景配色」面板（會蓋住 HUD 的 MODE/ARMED 列），回選單再顯示
     const tuner = document.getElementById('color-tuner');
     if (tuner) tuner.style.display = show ? 'none' : '';
+}
+
+// === 搖桿進階設定折疊 ===
+window.toggleGamepadAdv = function (forceOpen) {
+    const area = document.getElementById('gamepad-adv');
+    const arrow = document.getElementById('gp-adv-arrow');
+    if (!area) return;
+    const open = forceOpen === true ? true : area.style.display === 'none';
+    area.style.display = open ? 'block' : 'none';
+    if (arrow) arrow.innerText = open ? '▾' : '▸';
+};
+// 手把一連接就自動展開（會用搖桿的人才需要看）
+window.addEventListener('gamepadconnected', () => window.toggleGamepadAdv(true));
+
+// === 進關按鍵提示浮層（4 秒淡出，任意按鍵/觸碰提前關閉）===
+let _keyHintTimer = null;
+function showKeyHint() {
+    const el = document.getElementById('key-hint-overlay');
+    if (!el) return;
+    let html;
+    if (input.useTouch) {
+        html = '<b>左搖桿</b> 油門／轉向 ・ <b>右搖桿</b> 前後左右<br><b>ARM 鍵</b> 解鎖起飛';
+    } else if (input.useHybrid) {
+        html = '<b>左搖桿</b> 油門／轉向 ・ <b>方向鍵</b> 前後左右<br><b>Space</b> 解鎖起飛';
+    } else if (input.useKeyboard) {
+        html = '<b>W / S</b> 上升／下降 ・ <b>A / D</b> 轉向<br><b>↑↓←→</b> 前後左右 ・ <b>Space</b> 解鎖起飛';
+    } else {
+        html = '<b>左桿</b> 油門／轉向 ・ <b>右桿</b> 前後左右<br><b>A 鍵或內八</b> 解鎖起飛';
+    }
+    el.innerHTML = html;
+    el.style.display = 'block';
+    el.style.opacity = '1';
+    clearTimeout(_keyHintTimer);
+    const dismiss = () => {
+        el.style.opacity = '0';
+        setTimeout(() => { el.style.display = 'none'; }, 600);
+        window.removeEventListener('keydown', dismiss);
+        window.removeEventListener('touchstart', dismiss);
+    };
+    _keyHintTimer = setTimeout(dismiss, 4000);
+    window.addEventListener('keydown', dismiss, { once: false });
+    window.addEventListener('touchstart', dismiss, { once: false });
 }
 
 // === 2D 雷達 ===

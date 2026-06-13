@@ -1,4 +1,4 @@
-import { CONFIG } from './Config.js?v=20260611-uifix';
+import { CONFIG } from './Config.js?v=20260613-uiplus';
 
 export class GameScene {
     constructor() {
@@ -205,21 +205,50 @@ export class GameScene {
         this.scene.add(fill);
     }
 
+    // 程序化草地紋理：灰階亮度微變化，LOS 平移時靠地面紋理流動產生速度感
+    // 灰階 + material.color 乘法 tint → 配色面板調草地色完全相容
+    _makeGrassTexture(repeat) {
+        const size = 256;
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, size, size);
+        // 大塊柔和明暗斑（草色不均勻感）
+        for (let i = 0; i < 60; i++) {
+            const v = 225 + Math.floor(Math.random() * 30); // 225~255
+            ctx.fillStyle = `rgba(${v},${v},${v},0.5)`;
+            const w = 20 + Math.random() * 60, h = 20 + Math.random() * 60;
+            ctx.fillRect(Math.random() * size, Math.random() * size, w, h);
+        }
+        // 細碎草點
+        for (let i = 0; i < 900; i++) {
+            const v = 215 + Math.floor(Math.random() * 40);
+            ctx.fillStyle = `rgb(${v},${v},${v})`;
+            ctx.fillRect(Math.random() * size, Math.random() * size, 2, 2);
+        }
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(repeat, repeat);
+        tex.anisotropy = 4;
+        return tex;
+    }
+
     _initEnvironment() {
-        // 主地面
+        // 主地面（紋理 6.25m/格）
         const ground = new THREE.Mesh(
             new THREE.PlaneGeometry(300, 300),
-            new THREE.MeshStandardMaterial({ color: 0x14541a, roughness: 0.85 })
+            new THREE.MeshStandardMaterial({ color: 0x14541a, roughness: 0.85, map: this._makeGrassTexture(48) })
         );
         ground.rotation.x = -Math.PI / 2;
         ground.receiveShadow = true;
         this.scene.add(ground);
         this.outerGround = ground;
 
-        // 飛行區內圈（略淺）
+        // 飛行區內圈（略淺，紋理同密度 44/7≈6.3m/格）
         const innerGround = new THREE.Mesh(
             new THREE.PlaneGeometry(44, 44),
-            new THREE.MeshStandardMaterial({ color: 0x2a7a2e, roughness: 0.78 })
+            new THREE.MeshStandardMaterial({ color: 0x2a7a2e, roughness: 0.78, map: this._makeGrassTexture(7) })
         );
         innerGround.rotation.x = -Math.PI / 2;
         innerGround.position.y = 0.005;
